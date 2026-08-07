@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Itam.Application/Itam.Application.csproj" />
+  <Project Path="Itam.Domain/Itam.Domain.csproj" />
+  <Project Path="Itam.Infrastructure/Itam.Infrastructure.csproj" />
+  <Project Path="Itam.WebApi/Itam.WebApi.csproj" />
+</Solution>

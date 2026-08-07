@@ -1,0 +1,6 @@
+@Itam.WebApi_HostAddress = http://localhost:5266
+
+GET {{Itam.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
