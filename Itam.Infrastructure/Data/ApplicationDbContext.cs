@@ -1,11 +1,10 @@
+using Itam.Application.Interfaces;
 using Itam.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Itam.Infrastructure.Data;
 
-using Itam.Application.Interfaces;   // <-- add this using
-
-public sealed class ApplicationDbContext : DbContext, IApplicationDbContext   // <-- implement the interface
+public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)

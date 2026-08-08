@@ -1,5 +1,3 @@
-using System.Net.Mail;
-
 namespace Itam.Domain.Entities;
 
 public class RepairHistory : BaseEntity

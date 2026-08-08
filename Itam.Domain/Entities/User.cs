@@ -1,5 +1,4 @@
 using Itam.Domain.Enums;
-using System.Net.Sockets;
 
 namespace Itam.Domain.Entities;
 
