@@ -100,12 +100,12 @@ public sealed class RepairService : IRepairService
             throw new ForbiddenException("You can only view repairs for your own tickets.");
         }
 
-        return await Query()
+        var repairs = await Query()
             .Where(r => r.TicketId == ticketId)
             .OrderByDescending(r => r.RepairDate)
-            .ToListAsync(ct) is var repairs
-            ? repairs.Select(MapRepair).ToList()
-            : new List<RepairHistoryDto>();
+            .ToListAsync(ct);
+
+        return repairs.Select(MapRepair).ToList();
     }
 
     public async Task<IReadOnlyList<RepairHistoryDto>> GetByAssetAsync(Guid assetId, CancellationToken ct = default)

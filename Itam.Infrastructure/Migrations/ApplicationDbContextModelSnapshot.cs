@@ -408,7 +408,8 @@ namespace Itam.Infrastructure.Migrations
                     b.Property<string>("SerialNumber")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("SerialNumber");
 
                     b.HasIndex("SerialNumber")
                         .IsUnique()
@@ -486,11 +487,12 @@ namespace Itam.Infrastructure.Migrations
                     b.Property<string>("SerialNumber")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Laptop_SerialNumber");
 
                     b.HasIndex("SerialNumber")
                         .IsUnique()
-                        .HasFilter("[SerialNumber] IS NOT NULL");
+                        .HasFilter("[Laptop_SerialNumber] IS NOT NULL");
 
                     b.ToTable("Assets", t =>
                         {
@@ -508,9 +510,6 @@ namespace Itam.Infrastructure.Migrations
 
                             t.Property("RAM")
                                 .HasColumnName("Laptop_RAM");
-
-                            t.Property("SerialNumber")
-                                .HasColumnName("Laptop_SerialNumber");
                         });
 
                     b.HasDiscriminator().HasValue(0);

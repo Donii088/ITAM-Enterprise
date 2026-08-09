@@ -1,6 +1,4 @@
 using Itam.Domain.Enums;
-using System.Net.Mail;
-using System.Net.Sockets;
 
 namespace Itam.Domain.Entities;
 

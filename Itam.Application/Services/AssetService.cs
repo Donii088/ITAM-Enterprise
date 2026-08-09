@@ -39,7 +39,7 @@ public sealed class AssetService : IAssetService
         };
 
         _dbContext.Laptops.Add(laptop);
-        await _dbContext.SaveChangesAsync(ct);
+        await SaveWithSerialGuardAsync(ct);
         _logger.LogInformation("Laptop {AssetId} created (Serial {Serial}).", laptop.Id, laptop.SerialNumber);
 
         return await GetDetailsAsync(laptop.Id, ct);
@@ -339,6 +339,8 @@ public sealed class AssetService : IAssetService
 
     public async Task<StorageDto> CreateStorageAsync(CreateStorageRequestDto request, CancellationToken ct = default)
     {
+        await ValidateStorageParentAsync(request.LaptopId, request.DesktopPcId, ct);
+
         var storage = new Storage
         {
             SerialNumber = request.SerialNumber,
@@ -367,6 +369,8 @@ public sealed class AssetService : IAssetService
         {
             throw new BusinessRuleViolationException("A storage device with this serial number already exists.");
         }
+
+        await ValidateStorageParentAsync(request.LaptopId, request.DesktopPcId, ct);
 
         storage.SerialNumber = request.SerialNumber;
         storage.Capacity = request.Capacity;
@@ -414,7 +418,7 @@ public sealed class AssetService : IAssetService
                 || repairIds.Contains(a.RepairHistoryId))
             .ToListAsync(ct);
 
-        // >>> NEW (Phase 10): erase the physical files from disk FIRST. <<<
+        // Physical files have no FK constraints, so remove them before the DB rows are deleted.
         foreach (var attachment in attachments)
         {
             await _fileStorage.DeleteAsync(attachment.FilePath, ct);
@@ -522,6 +526,19 @@ public sealed class AssetService : IAssetService
             asset.Id, asset.AssetType, asset.Status, brand, model, serial,
             employee is null ? null : $"{employee.FirstName} {employee.LastName}",
             asset.CreatedAt);
+    }
+
+    private async Task ValidateStorageParentAsync(Guid? laptopId, Guid? desktopPcId, CancellationToken ct)
+    {
+        if (laptopId.HasValue && !await _dbContext.Laptops.AnyAsync(l => l.Id == laptopId.Value, ct))
+        {
+            throw new EntityNotFoundException(nameof(Laptop), laptopId.Value);
+        }
+
+        if (desktopPcId.HasValue && !await _dbContext.DesktopPcs.AnyAsync(p => p.Id == desktopPcId.Value, ct))
+        {
+            throw new EntityNotFoundException(nameof(DesktopPc), desktopPcId.Value);
+        }
     }
 
     private async Task SaveWithSerialGuardAsync(CancellationToken ct)
