@@ -17,7 +17,12 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           <AppErrorBoundary>
             <App />
           </AppErrorBoundary>
-          <Toaster richColors closeButton position="top-right" />
+          {/*
+            bottom-right (not top-right): page headers across the app put action buttons
+            (e.g. "Export CSV", "Add asset") in the top-right corner, which a top-right toast
+            would sit on top of. Bottom-right never collides with in-page content.
+          */}
+          <Toaster richColors closeButton position="bottom-right" />
         </TooltipProvider>
       </QueryClientProvider>
     </BrowserRouter>
