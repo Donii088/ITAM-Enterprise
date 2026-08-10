@@ -25,10 +25,13 @@ public sealed class AssetAssignmentConfiguration : IEntityTypeConfiguration<Asse
             .HasForeignKey(assignment => assignment.AssetId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // SetNull (not Restrict): a hard-deleted employee's closed-out assignment history is kept
+        // for audit purposes, with EmployeeId anonymized to null. Active assignments can't reach
+        // this path because UserService.HardDeleteAsync refuses to delete a user with one.
         builder.HasOne(assignment => assignment.Employee)
             .WithMany(user => user.AssetAssignments)
             .HasForeignKey(assignment => assignment.EmployeeId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(assignment => assignment.EmployeeId);
 

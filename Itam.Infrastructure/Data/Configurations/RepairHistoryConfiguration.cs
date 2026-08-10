@@ -33,9 +33,11 @@ public sealed class RepairHistoryConfiguration : IEntityTypeConfiguration<Repair
             .HasForeignKey(repairHistory => repairHistory.AssetId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // SetNull (not Restrict): a hard-deleted admin's repair history is kept for audit purposes,
+        // with AdminId anonymized to null.
         builder.HasOne(repairHistory => repairHistory.Admin)
             .WithMany(user => user.RepairHistories)
             .HasForeignKey(repairHistory => repairHistory.AdminId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

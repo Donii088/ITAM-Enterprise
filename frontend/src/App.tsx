@@ -27,6 +27,7 @@ const MyTicketsPage = lazy(() => import('@/pages/tickets/MyTicketsPage'));
 const TicketDetailPage = lazy(() => import('@/pages/tickets/TicketDetailPage'));
 const RepairsListPage = lazy(() => import('@/pages/repairs/RepairsListPage'));
 const UsersListPage = lazy(() => import('@/pages/users/UsersListPage'));
+const UserDetailPage = lazy(() => import('@/pages/users/UserDetailPage'));
 
 function withSuspense(element: React.ReactNode) {
   return <Suspense fallback={<PageLoader />}>{element}</Suspense>;
@@ -73,6 +74,7 @@ export default function App() {
               <Route path={routes.tickets.list} element={withSuspense(<TicketsListPage />)} />
               <Route path={routes.repairs.list} element={withSuspense(<RepairsListPage />)} />
               <Route path={routes.users.list} element={withSuspense(<UsersListPage />)} />
+              <Route path={routes.users.detail(':id')} element={withSuspense(<UserDetailPage />)} />
             </Route>
 
             <Route index element={<Navigate to={routes.dashboard} replace />} />

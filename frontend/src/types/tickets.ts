@@ -7,7 +7,7 @@ export interface Ticket {
   description: string;
   priority: TicketPriority;
   status: TicketStatus;
-  employeeId: string;
+  employeeId: string | null;
   employeeName: string;
   assetId: string;
   assetType: AssetType;

@@ -8,7 +8,7 @@ public sealed record TicketDto(
     string Description,
     TicketPriority Priority,
     TicketStatus Status,
-    Guid EmployeeId,
+    Guid? EmployeeId,
     string EmployeeName,
     Guid AssetId,
     AssetType AssetType,

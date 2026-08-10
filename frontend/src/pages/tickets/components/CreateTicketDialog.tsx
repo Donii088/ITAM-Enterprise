@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
@@ -6,16 +7,21 @@ import { Alert } from '@/components/ui/Alert';
 import { FormInput } from '@/components/shared/form/FormInput';
 import { FormTextarea } from '@/components/shared/form/FormTextarea';
 import { FormSelect } from '@/components/shared/form/FormSelect';
+import { FormFileInput } from '@/components/shared/form/FormFileInput';
 import { createTicketSchema, type CreateTicketFormValues } from '@/features/tickets/schemas';
 import { useCreateTicket } from '@/features/tickets/useTickets';
+import { useUploadTicketAttachment } from '@/features/attachments/useAttachments';
 import { useMyAssets } from '@/features/assignments/useAssignments';
+import { ALLOWED_PHOTO_EXTENSIONS, validatePhotoFile } from '@/lib/file-validation';
 import { TICKET_PRIORITY, ASSET_TYPE_LABELS } from '@/types';
 
 const PRIORITY_OPTIONS = Object.values(TICKET_PRIORITY).map((v) => ({ value: v, label: v }));
 
 export function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const createTicket = useCreateTicket();
+  const uploadAttachment = useUploadTicketAttachment();
   const { data: myAssets, isLoading: assetsLoading } = useMyAssets();
+  const [photo, setPhoto] = React.useState<File | null>(null);
 
   const { control, handleSubmit, reset, formState } = useForm<CreateTicketFormValues>({
     resolver: zodResolver(createTicketSchema),
@@ -28,14 +34,23 @@ export function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOp
       label: `${a.assetBrand ?? ''} ${a.assetModel ?? a.assetSerial ?? ''} — ${ASSET_TYPE_LABELS[a.assetType]}`.trim(),
     })) ?? [];
 
-  function onSubmit(values: CreateTicketFormValues) {
-    createTicket
-      .mutateAsync(values)
-      .then(() => {
-        reset();
-        onOpenChange(false);
-      })
-      .catch(() => undefined);
+  async function onSubmit(values: CreateTicketFormValues) {
+    let ticket;
+    try {
+      ticket = await createTicket.mutateAsync(values);
+    } catch {
+      return;
+    }
+
+    if (photo) {
+      // The mutation itself surfaces a toast on success/failure; a failed photo upload
+      // shouldn't block closing the dialog since the ticket was already created.
+      await uploadAttachment.mutateAsync({ entityId: ticket.id, file: photo }).catch(() => undefined);
+    }
+
+    reset();
+    setPhoto(null);
+    onOpenChange(false);
   }
 
   return (
@@ -70,11 +85,22 @@ export function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOp
               required
             />
             <FormSelect control={control} name="priority" label="Priority" options={PRIORITY_OPTIONS} required />
+            <FormFileInput
+              label="Photo"
+              hint="Optional — attach a photo of the issue"
+              file={photo}
+              onChange={setPhoto}
+              accept={ALLOWED_PHOTO_EXTENSIONS}
+              validate={validatePhotoFile}
+              browseLabel="Click to upload a photo"
+              helpText="JPG, PNG or WEBP — up to 5MB"
+              disabled={formState.isSubmitting}
+            />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={formState.isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit" isLoading={formState.isSubmitting || createTicket.isPending}>
+              <Button type="submit" isLoading={formState.isSubmitting || createTicket.isPending || uploadAttachment.isPending}>
                 Submit ticket
               </Button>
             </DialogFooter>

@@ -54,6 +54,21 @@ export const storageSchema = z
   });
 export type StorageFormValues = z.infer<typeof storageSchema>;
 
+// Used when creating a new storage device inline from the asset-creation dialog: the parent
+// (laptopId/desktopPcId) isn't part of the form since it's attached to the asset being created
+// as a separate step, once that asset has an id.
+export const inlineStorageSchema = z.object({
+  serialNumber: z.string().trim().min(1, 'Serial number is required').max(150, 'Maximum 150 characters'),
+  capacity: z.coerce.number({ invalid_type_error: 'Capacity is required' }).int().positive('Must be greater than 0'),
+  storageType: z.enum([STORAGE_TYPE.SSD, STORAGE_TYPE.NVMe, STORAGE_TYPE.HDD], {
+    errorMap: () => ({ message: 'Select a storage type' }),
+  }),
+  storageUnit: z.enum([STORAGE_UNIT.GB, STORAGE_UNIT.TB], {
+    errorMap: () => ({ message: 'Select a unit' }),
+  }),
+});
+export type InlineStorageFormValues = z.infer<typeof inlineStorageSchema>;
+
 export const assetStatusSchema = z.object({
   status: z.enum([ASSET_STATUS.Available, ASSET_STATUS.Assigned, ASSET_STATUS.InRepair, ASSET_STATUS.Broken], {
     errorMap: () => ({ message: 'Select a status' }),

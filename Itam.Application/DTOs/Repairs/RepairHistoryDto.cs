@@ -11,7 +11,7 @@ public sealed record RepairHistoryDto(
     string? AssetBrand,
     string? AssetModel,
     string? AssetSerial,
-    Guid AdminId,
+    Guid? AdminId,
     string AdminName,
     string RepairDescription,
     DateTime RepairDate,

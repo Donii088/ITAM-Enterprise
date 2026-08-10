@@ -138,6 +138,39 @@ export function useDeleteStorage() {
   });
 }
 
+/**
+ * Attaches an existing (unassigned) storage device to a just-created Laptop/DesktopPc.
+ * UpdateStorageRequest requires every field, so this reads the current device first and
+ * only overrides the parent ids.
+ */
+export function useAttachStorageToAsset() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      storageId,
+      laptopId,
+      desktopPcId,
+    }: {
+      storageId: string;
+      laptopId?: string | null;
+      desktopPcId?: string | null;
+    }) => {
+      const current = await assetService.getStorageById(storageId);
+      return assetService.updateStorage(storageId, {
+        serialNumber: current.serialNumber,
+        capacity: current.capacity,
+        storageType: current.storageType,
+        storageUnit: current.storageUnit,
+        laptopId: laptopId ?? null,
+        desktopPcId: desktopPcId ?? null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.assets.all });
+    },
+  });
+}
+
 export function useExportAssets() {
   return useMutation({
     mutationFn: (query: GetAssetsQuery) => exportService.exportAssets(query),

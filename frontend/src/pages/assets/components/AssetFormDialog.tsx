@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { FormField } from '@/components/ui/FormField';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { FormInput } from '@/components/shared/form/FormInput';
 import { FormSelect } from '@/components/shared/form/FormSelect';
+import { StorageAttachField } from './StorageAttachField';
 import {
   desktopPcSchema,
   dockSchema,
@@ -19,7 +21,7 @@ import {
   type LaptopFormValues,
   type MonitorFormValues,
 } from '@/features/assets/schemas';
-import { useCreateAsset, useUpdateAsset } from '@/features/assets/useAssets';
+import { useAttachStorageToAsset, useCreateAsset, useUpdateAsset } from '@/features/assets/useAssets';
 import { ASSET_TYPE, ASSET_TYPE_LABELS, CONNECTION_TYPE_LABELS, type AssetDetails, type AssetType } from '@/types';
 
 export interface AssetFormDialogProps {
@@ -48,6 +50,8 @@ function LaptopOrDesktopFields({ control }: { control: ReturnType<typeof useForm
 function LaptopForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset?: AssetDetails; onDone: () => void }) {
   const createMutation = useCreateAsset();
   const updateMutation = useUpdateAsset();
+  const attachStorage = useAttachStorageToAsset();
+  const [storageId, setStorageId] = React.useState<string | null>(null);
   const { control, handleSubmit, formState } = useForm<LaptopFormValues>({
     resolver: zodResolver(laptopSchema),
     defaultValues: {
@@ -65,17 +69,33 @@ function LaptopForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset?: 
       mode === 'create'
         ? createMutation.mutateAsync({ assetType: ASSET_TYPE.Laptop, payload: values })
         : updateMutation.mutateAsync({ assetType: ASSET_TYPE.Laptop, id: asset!.id, payload: values });
-    mutation.then(onDone).catch(() => undefined);
+
+    mutation
+      .then(async (created) => {
+        if (mode === 'create' && storageId) {
+          try {
+            await attachStorage.mutateAsync({ storageId, laptopId: created.id });
+          } catch {
+            toast.error('Laptop created, but the storage device could not be attached. Attach it from the Storage tab.');
+          }
+        }
+        onDone();
+      })
+      .catch(() => undefined);
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <LaptopOrDesktopFields control={control} />
+      {mode === 'create' && <StorageAttachField value={storageId} onChange={setStorageId} />}
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone} disabled={formState.isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit" isLoading={formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>
+        <Button
+          type="submit"
+          isLoading={formState.isSubmitting || createMutation.isPending || updateMutation.isPending || attachStorage.isPending}
+        >
           {mode === 'create' ? 'Create laptop' : 'Save changes'}
         </Button>
       </DialogFooter>
@@ -86,6 +106,8 @@ function LaptopForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset?: 
 function DesktopPcForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset?: AssetDetails; onDone: () => void }) {
   const createMutation = useCreateAsset();
   const updateMutation = useUpdateAsset();
+  const attachStorage = useAttachStorageToAsset();
+  const [storageId, setStorageId] = React.useState<string | null>(null);
   const { control, handleSubmit, formState } = useForm<DesktopPcFormValues>({
     resolver: zodResolver(desktopPcSchema),
     defaultValues: {
@@ -103,17 +125,33 @@ function DesktopPcForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset
       mode === 'create'
         ? createMutation.mutateAsync({ assetType: ASSET_TYPE.DesktopPc, payload: values })
         : updateMutation.mutateAsync({ assetType: ASSET_TYPE.DesktopPc, id: asset!.id, payload: values });
-    mutation.then(onDone).catch(() => undefined);
+
+    mutation
+      .then(async (created) => {
+        if (mode === 'create' && storageId) {
+          try {
+            await attachStorage.mutateAsync({ storageId, desktopPcId: created.id });
+          } catch {
+            toast.error('Desktop PC created, but the storage device could not be attached. Attach it from the Storage tab.');
+          }
+        }
+        onDone();
+      })
+      .catch(() => undefined);
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <LaptopOrDesktopFields control={control} />
+      {mode === 'create' && <StorageAttachField value={storageId} onChange={setStorageId} />}
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone} disabled={formState.isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit" isLoading={formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>
+        <Button
+          type="submit"
+          isLoading={formState.isSubmitting || createMutation.isPending || updateMutation.isPending || attachStorage.isPending}
+        >
           {mode === 'create' ? 'Create desktop PC' : 'Save changes'}
         </Button>
       </DialogFooter>

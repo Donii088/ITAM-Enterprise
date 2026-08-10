@@ -11,7 +11,7 @@ export interface RepairHistory {
   assetBrand: string | null;
   assetModel: string | null;
   assetSerial: string | null;
-  adminId: string;
+  adminId: string | null;
   adminName: string;
   repairDescription: string;
   repairDate: string;

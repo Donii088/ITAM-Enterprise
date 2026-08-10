@@ -172,20 +172,41 @@ public sealed class UserService : IUserService
 
     public async Task HardDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await _dbContext.Users.SingleOrDefaultAsync(u => u.Id == id, cancellationToken)
+        var user = await _dbContext.Users
+            .Include(u => u.AssetAssignments)
+            .Include(u => u.Tickets)
+            .SingleOrDefaultAsync(u => u.Id == id, cancellationToken)
             ?? throw new EntityNotFoundException(nameof(User), id);
 
-        var assignmentCount = await _dbContext.AssetAssignments.CountAsync(a => a.EmployeeId == id, cancellationToken);
-        var ticketCount = await _dbContext.Tickets.CountAsync(t => t.EmployeeId == id, cancellationToken);
-        var repairCount = await _dbContext.RepairHistories.CountAsync(r => r.AdminId == id, cancellationToken);
-
-        if (assignmentCount + ticketCount + repairCount > 0)
+        if (user.IsActive)
         {
             throw new BusinessRuleViolationException(
-                $"User cannot be hard deleted: {assignmentCount} assignment(s), {ticketCount} ticket(s), " +
-                $"{repairCount} repair record(s) reference this user. Deactivate the user instead to preserve history.");
+                "Active users cannot be hard deleted. Deactivate the user first, then try again.");
         }
 
+        var activeAssignmentCount = user.AssetAssignments.Count(a => a.UnassignedAt == null);
+        var openTicketCount = user.Tickets.Count(t => t.Status != TicketStatus.Done && t.Status != TicketStatus.Cancelled);
+
+        if (activeAssignmentCount > 0 || openTicketCount > 0)
+        {
+            var blockers = new List<string>();
+            if (activeAssignmentCount > 0)
+            {
+                blockers.Add($"{activeAssignmentCount} active asset assignment{(activeAssignmentCount == 1 ? "" : "s")}");
+            }
+            if (openTicketCount > 0)
+            {
+                blockers.Add($"{openTicketCount} open ticket{(openTicketCount == 1 ? "" : "s")}");
+            }
+
+            throw new BusinessRuleViolationException(
+                $"User cannot be deleted: they still have {string.Join(" and ", blockers)}. " +
+                "Unassign their assets and resolve or cancel their open tickets first.");
+        }
+
+        // Closed tickets, past assignments, and repair history performed by this user are kept for
+        // audit purposes; the database anonymizes those rows (EmployeeId/AdminId set to null) via
+        // ON DELETE SET NULL rather than blocking the delete or cascading it into lost history.
         _dbContext.Users.Remove(user);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
