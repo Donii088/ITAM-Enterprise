@@ -462,12 +462,15 @@ public sealed class AssetService : IAssetService
     {
         var current = asset.AssetAssignments.FirstOrDefault();
 
+        // "current" is always an active assignment (loaded via the UnassignedAt == null filter
+        // below), and UserService.HardDeleteAsync refuses to delete a user with an active
+        // assignment, so EmployeeId/Employee are guaranteed non-null here.
         var summary = current is null
             ? null
             : new AssetAssignmentSummaryDto(
                 current.Id,
-                current.EmployeeId,
-                $"{current.Employee.FirstName} {current.Employee.LastName}",
+                current.EmployeeId!.Value,
+                current.Employee is null ? "Deleted User" : $"{current.Employee.FirstName} {current.Employee.LastName}",
                 current.AssignedAt);
 
         var dto = new AssetDetailsDto(

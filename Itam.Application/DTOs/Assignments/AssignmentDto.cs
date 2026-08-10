@@ -9,7 +9,7 @@ public sealed record AssignmentDto(
     string? AssetBrand,
     string? AssetModel,
     string? AssetSerial,
-    Guid EmployeeId,
+    Guid? EmployeeId,
     string EmployeeName,
     DateTime AssignedAt,
     DateTime? UnassignedAt,

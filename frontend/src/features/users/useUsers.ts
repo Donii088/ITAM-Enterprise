@@ -13,6 +13,14 @@ export function useUsersList(query: GetUsersQuery) {
   });
 }
 
+export function useUser(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.users.detail(id ?? ''),
+    queryFn: () => userService.getById(id as string),
+    enabled: Boolean(id),
+  });
+}
+
 function invalidateUsers(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
   queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.overview });

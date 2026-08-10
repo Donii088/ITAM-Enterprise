@@ -40,7 +40,6 @@ public sealed class AuthService : IAuthService
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default)
     {
         var user = await _dbContext.Users
-            .AsNoTracking()
             .SingleOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
 
         if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
@@ -54,6 +53,8 @@ public sealed class AuthService : IAuthService
             _logger.LogWarning("Login attempt for inactive account {Email}.", user.Email);
             throw new UnauthorizedException("This account is inactive. Contact your IT administrator.");
         }
+
+        user.LastLoginAt = _timeProvider.GetUtcNow().UtcDateTime;
 
         var refreshToken = CreateRefreshToken(user.Id);
         _dbContext.RefreshTokens.Add(refreshToken);

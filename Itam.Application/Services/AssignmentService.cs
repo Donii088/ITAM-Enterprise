@@ -193,7 +193,7 @@ public sealed class AssignmentService : IAssignmentService
             model,
             serial,
             assignment.EmployeeId,
-            $"{assignment.Employee.FirstName} {assignment.Employee.LastName}",
+            assignment.Employee is null ? "Deleted User" : $"{assignment.Employee.FirstName} {assignment.Employee.LastName}",
             assignment.AssignedAt,
             assignment.UnassignedAt,
             assignment.UnassignedAt == null);

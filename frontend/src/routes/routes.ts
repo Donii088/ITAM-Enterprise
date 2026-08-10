@@ -23,5 +23,6 @@ export const routes = {
   },
   users: {
     list: '/users',
+    detail: (id: string) => `/users/${id}`,
   },
 } as const;

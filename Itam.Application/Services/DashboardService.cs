@@ -171,7 +171,7 @@ public sealed class DashboardService : IDashboardService
             brand,
             model,
             serial,
-            $"{assignment.Employee.FirstName} {assignment.Employee.LastName}",
+            assignment.Employee is null ? "Deleted User" : $"{assignment.Employee.FirstName} {assignment.Employee.LastName}",
             assignment.Asset.CreatedAt);
     }
 
@@ -186,7 +186,7 @@ public sealed class DashboardService : IDashboardService
             ticket.Priority,
             ticket.Status,
             ticket.EmployeeId,
-            $"{ticket.Employee.FirstName} {ticket.Employee.LastName}",
+            ticket.Employee is null ? "Deleted User" : $"{ticket.Employee.FirstName} {ticket.Employee.LastName}",
             ticket.AssetId,
             ticket.Asset.AssetType,
             brand,

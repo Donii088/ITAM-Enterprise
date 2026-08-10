@@ -201,7 +201,7 @@ public sealed class RepairService : IRepairService
             model,
             serial,
             repair.AdminId,
-            repair.Admin is null ? string.Empty : $"{repair.Admin.FirstName} {repair.Admin.LastName}",
+            repair.Admin is null ? "Deleted User" : $"{repair.Admin.FirstName} {repair.Admin.LastName}",
             repair.RepairDescription,
             repair.RepairDate,
             repair.CreatedAt);
@@ -226,7 +226,7 @@ public sealed class RepairService : IRepairService
             ticket.Priority,
             ticket.Status,
             ticket.EmployeeId,
-            $"{ticket.Employee.FirstName} {ticket.Employee.LastName}",
+            ticket.Employee is null ? "Deleted User" : $"{ticket.Employee.FirstName} {ticket.Employee.LastName}",
             ticket.AssetId,
             ticket.Asset.AssetType,
             brand,

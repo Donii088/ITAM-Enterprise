@@ -236,7 +236,7 @@ public sealed class TicketService : ITicketService
             ticket.Priority,
             ticket.Status,
             ticket.EmployeeId,
-            $"{ticket.Employee.FirstName} {ticket.Employee.LastName}",
+            ticket.Employee is null ? "Deleted User" : $"{ticket.Employee.FirstName} {ticket.Employee.LastName}",
             ticket.AssetId,
             ticket.Asset.AssetType,
             brand,

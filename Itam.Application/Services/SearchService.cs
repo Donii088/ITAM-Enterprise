@@ -97,9 +97,10 @@ public sealed class SearchService : ISearchService
                     || ((Monitor)a).Resolution.ToLower().Contains(term)))
                 || (a is Dock && ((Dock)a).Brand.ToLower().Contains(term))
                 || (a is KeyboardMouseSet && ((KeyboardMouseSet)a).Brand.ToLower().Contains(term))
+                // UnassignedAt == null (active assignment) guarantees a non-null employee.
                 || _dbContext.AssetAssignments.Any(x => x.AssetId == a.Id
                     && x.UnassignedAt == null
-                    && (x.Employee.FirstName + " " + x.Employee.LastName).ToLower().Contains(term)))
+                    && (x.Employee!.FirstName + " " + x.Employee.LastName).ToLower().Contains(term)))
             .OrderByDescending(a => a.CreatedAt)
             .Take(limit)
             .ToListAsync(ct);
@@ -140,7 +141,7 @@ public sealed class SearchService : ISearchService
                 t.Id,
                 "Ticket",
                 t.Title,
-                $"{t.Employee.FirstName} {t.Employee.LastName}",
+                t.Employee is null ? "Deleted User" : $"{t.Employee.FirstName} {t.Employee.LastName}",
                 t.Status.ToString()))
             .ToList();
     }

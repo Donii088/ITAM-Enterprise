@@ -8,7 +8,7 @@ export interface Assignment {
   assetBrand: string | null;
   assetModel: string | null;
   assetSerial: string | null;
-  employeeId: string;
+  employeeId: string | null;
   employeeName: string;
   assignedAt: string;
   unassignedAt: string | null;

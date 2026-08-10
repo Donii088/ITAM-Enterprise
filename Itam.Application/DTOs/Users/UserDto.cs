@@ -11,4 +11,5 @@ public sealed record UserDto(
     Role Role,
     bool IsActive,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    DateTime? LastLoginAt);

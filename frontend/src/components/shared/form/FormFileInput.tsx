@@ -3,7 +3,11 @@ import { FileText, Image as ImageIcon, Upload, X } from 'lucide-react';
 import { FormField } from '@/components/ui/FormField';
 import { Button } from '@/components/ui/Button';
 import { formatFileSize } from '@/lib/formatters';
-import { ALLOWED_ATTACHMENT_EXTENSIONS, validateAttachmentFile } from '@/lib/file-validation';
+import {
+  ALLOWED_ATTACHMENT_EXTENSIONS,
+  validateAttachmentFile,
+  type FileValidationResult,
+} from '@/lib/file-validation';
 import { cn } from '@/lib/utils';
 
 export interface FormFileInputProps {
@@ -13,9 +17,24 @@ export interface FormFileInputProps {
   onChange: (file: File | null) => void;
   error?: string;
   disabled?: boolean;
+  accept?: string[];
+  validate?: (file: File) => FileValidationResult;
+  browseLabel?: string;
+  helpText?: string;
 }
 
-export function FormFileInput({ label, hint, file, onChange, error, disabled }: FormFileInputProps) {
+export function FormFileInput({
+  label,
+  hint,
+  file,
+  onChange,
+  error,
+  disabled,
+  accept = ALLOWED_ATTACHMENT_EXTENSIONS,
+  validate = validateAttachmentFile,
+  browseLabel = 'Click to upload a file',
+  helpText = 'JPG, PNG or PDF — up to 5MB',
+}: FormFileInputProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = React.useState<string | undefined>();
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
@@ -35,7 +54,7 @@ export function FormFileInput({ label, hint, file, onChange, error, disabled }: 
       setLocalError(undefined);
       return;
     }
-    const result = validateAttachmentFile(selected);
+    const result = validate(selected);
     if (!result.valid) {
       setLocalError(result.error);
       onChange(null);
@@ -50,7 +69,7 @@ export function FormFileInput({ label, hint, file, onChange, error, disabled }: 
       <input
         ref={inputRef}
         type="file"
-        accept={ALLOWED_ATTACHMENT_EXTENSIONS.join(',')}
+        accept={accept.join(',')}
         className="sr-only"
         disabled={disabled}
         onChange={(e) => handleSelect(e.target.files?.[0] ?? null)}
@@ -92,9 +111,9 @@ export function FormFileInput({ label, hint, file, onChange, error, disabled }: 
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
             <Upload className="h-4 w-4 text-muted-foreground" />
           </div>
-          <span className="text-sm font-medium text-foreground">Click to upload a file</span>
+          <span className="text-sm font-medium text-foreground">{browseLabel}</span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <ImageIcon className="h-3 w-3" /> JPG, PNG or PDF — up to 5MB
+            <ImageIcon className="h-3 w-3" /> {helpText}
           </span>
         </button>
       )}

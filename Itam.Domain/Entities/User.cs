@@ -11,6 +11,7 @@ public class User : BaseEntity
     public string JobTitle { get; set; } = string.Empty;
     public Role Role { get; set; }
     public bool IsActive { get; set; } = true;
+    public DateTime? LastLoginAt { get; set; }
 
     // Navigation Properties
     public ICollection<AssetAssignment> AssetAssignments { get; set; } = new List<AssetAssignment>();

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Edit, MoreHorizontal, Plus, Trash2, UserCheck, UserX, Users2 } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Edit, Eye, MoreHorizontal, Plus, Trash2, UserCheck, UserX, Users2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -29,11 +29,13 @@ import { useActivateUser, useDeactivateUser, useHardDeleteUser, useUsersList } f
 import { UserFormDialog } from './components/UserFormDialog';
 import { useAuth } from '@/features/auth/useAuth';
 import { formatDate } from '@/lib/formatters';
+import { routes } from '@/routes/routes';
 import { ROLE, ROLE_LABELS, type Role, type User } from '@/types';
 
 const DEFAULT_PAGE_SIZE = Number(import.meta.env.VITE_DEFAULT_PAGE_SIZE) || 10;
 
 export default function UsersListPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
@@ -146,7 +148,11 @@ export default function UsersListPage() {
               </TableHead>
               <TableBody>
                 {data?.items.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow
+                    key={user.id}
+                    className="cursor-pointer"
+                    onClick={() => navigate(routes.users.detail(user.id))}
+                  >
                     <TableTd>
                       <div className="flex items-center gap-2.5">
                         <Avatar name={`${user.firstName} ${user.lastName}`} size="sm" />
@@ -160,7 +166,7 @@ export default function UsersListPage() {
                     <TableTd><Badge variant={user.role === ROLE.ItAdmin ? 'primary' : 'default'}>{ROLE_LABELS[user.role]}</Badge></TableTd>
                     <TableTd><ActiveBadge isActive={user.isActive} /></TableTd>
                     <TableTd className="text-muted-foreground">{formatDate(user.createdAt)}</TableTd>
-                    <TableTd className="text-right">
+                    <TableTd className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Actions for ${user.firstName} ${user.lastName}`}>
@@ -168,6 +174,9 @@ export default function UsersListPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => navigate(routes.users.detail(user.id))}>
+                            <Eye className="h-4 w-4" /> View profile
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
                               setEditingUser(user);
@@ -192,7 +201,7 @@ export default function UsersListPage() {
                           <DropdownMenuItem
                             destructive
                             onClick={() => setDeleteTarget(user)}
-                            disabled={user.id === currentUser?.id}
+                            disabled={user.id === currentUser?.id || user.isActive}
                           >
                             <Trash2 className="h-4 w-4" /> Delete permanently
                           </DropdownMenuItem>
@@ -237,7 +246,7 @@ export default function UsersListPage() {
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title="Delete user permanently"
-        description={`This will permanently delete ${deleteTarget?.firstName} ${deleteTarget?.lastName} and all related records. This action cannot be undone.`}
+        description={`This will permanently delete ${deleteTarget?.firstName} ${deleteTarget?.lastName}. Closed tickets and past assignments are kept for history but will no longer reference this account. Blocked if they still have an active asset assignment or an open ticket. This action cannot be undone.`}
         confirmLabel="Delete permanently"
         isLoading={hardDeleteUser.isPending}
         onConfirm={() => {

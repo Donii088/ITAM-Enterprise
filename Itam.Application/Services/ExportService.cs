@@ -63,7 +63,9 @@ public sealed class ExportService : IExportService
 
         var employeeByAsset = await _dbContext.AssetAssignments.AsNoTracking()
             .Where(x => ids.Contains(x.AssetId) && x.UnassignedAt == null)
-            .Select(x => new { x.AssetId, Name = x.Employee.FirstName + " " + x.Employee.LastName })
+            // Filtered to UnassignedAt == null (active assignments), which are guaranteed to have
+            // an employee — HardDeleteAsync refuses to delete a user with an active assignment.
+            .Select(x => new { x.AssetId, Name = x.Employee!.FirstName + " " + x.Employee.LastName })
             .ToDictionaryAsync(x => x.AssetId, x => x.Name, ct);
 
         var sb = new StringBuilder();
@@ -124,7 +126,7 @@ public sealed class ExportService : IExportService
             sb.AppendLine(string.Join(',',
                 Esc(serial),
                 Esc(assignment.Asset.AssetType.ToString()),
-                Esc($"{assignment.Employee.FirstName} {assignment.Employee.LastName}"),
+                Esc(assignment.Employee is null ? "Deleted User" : $"{assignment.Employee.FirstName} {assignment.Employee.LastName}"),
                 assignment.AssignedAt.ToString("yyyy-MM-dd"),
                 assignment.UnassignedAt?.ToString("yyyy-MM-dd") ?? "",
                 assignment.UnassignedAt == null ? "Active" : "Closed"));

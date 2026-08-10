@@ -31,10 +31,13 @@ public sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.HasIndex(ticket => ticket.EmployeeId);
         builder.HasIndex(ticket => ticket.AssetId);
 
+        // SetNull (not Restrict): a hard-deleted employee's closed tickets are kept for audit
+        // purposes, with EmployeeId anonymized to null. Open tickets can't reach this path because
+        // UserService.HardDeleteAsync refuses to delete a user with one.
         builder.HasOne(ticket => ticket.Employee)
             .WithMany(user => user.Tickets)
             .HasForeignKey(ticket => ticket.EmployeeId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(ticket => ticket.Asset)
             .WithMany(asset => asset.Tickets)
