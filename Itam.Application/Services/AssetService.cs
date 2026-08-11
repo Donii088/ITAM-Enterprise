@@ -1,6 +1,7 @@
 using Itam.Application.Common;
 using Itam.Application.DTOs.Assets;
 using Itam.Application.Interfaces;
+using Itam.Domain.Constants;
 using Itam.Domain.Entities;
 using Itam.Domain.Enums;
 using Itam.Domain.Exceptions;
@@ -13,15 +14,18 @@ public sealed class AssetService : IAssetService
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IFileStorageService _fileStorage;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<AssetService> _logger;
 
     public AssetService(
         IApplicationDbContext dbContext,
         IFileStorageService fileStorage,
+        ICurrentUserService currentUserService,
         ILogger<AssetService> logger)
     {
         _dbContext = dbContext;
         _fileStorage = fileStorage;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -212,6 +216,27 @@ public sealed class AssetService : IAssetService
         }
 
         return MapDetails(asset, storageDevices);
+    }
+
+    public async Task<AssetDetailsDto> GetDetailsForViewerAsync(Guid id, CancellationToken ct = default)
+    {
+        var isAdmin = _currentUserService.Role == RoleConstants.ItAdmin;
+
+        if (!isAdmin)
+        {
+            var userId = _currentUserService.UserId
+                ?? throw new UnauthorizedException("You must be authenticated.");
+
+            var everAssignedToViewer = await _dbContext.AssetAssignments
+                .AnyAsync(a => a.AssetId == id && a.EmployeeId == userId, ct);
+
+            if (!everAssignedToViewer)
+            {
+                throw new ForbiddenException("You can only view assets that are or were assigned to you.");
+            }
+        }
+
+        return await GetDetailsAsync(id, ct);
     }
 
     public async Task<PagedResult<AssetListItemDto>> GetPagedAsync(GetAssetsQuery query, CancellationToken ct = default)

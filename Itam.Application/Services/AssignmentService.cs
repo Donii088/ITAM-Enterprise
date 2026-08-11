@@ -103,6 +103,15 @@ public sealed class AssignmentService : IAssignmentService
         return Map(assignment);
     }
 
+    public async Task<AssignmentDto> UnassignByAssetAsync(Guid assetId, CancellationToken ct = default)
+    {
+        var assignment = await _dbContext.AssetAssignments
+            .SingleOrDefaultAsync(a => a.AssetId == assetId && a.UnassignedAt == null, ct)
+            ?? throw new BusinessRuleViolationException("This asset is not currently assigned to anyone.");
+
+        return await UnassignAsync(assignment.Id, ct);
+    }
+
     public async Task<IReadOnlyList<AssignmentDto>> GetMyAssetsAsync(CancellationToken ct = default)
     {
         var userId = _currentUserService.UserId

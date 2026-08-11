@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeftRight,
   Briefcase,
@@ -126,6 +126,7 @@ export default function UserDetailPage() {
 }
 
 function AssetsTab({ employeeId }: { employeeId: string }) {
+  const navigate = useNavigate();
   const { data, isLoading, isError, error, refetch } = useAssignmentsList({
     employeeId,
     activeOnly: true,
@@ -157,13 +158,17 @@ function AssetsTab({ employeeId }: { employeeId: string }) {
           </TableHead>
           <TableBody>
             {data.items.map((assignment) => (
-              <TableRow key={assignment.id}>
+              <TableRow
+                key={assignment.id}
+                className="cursor-pointer"
+                onClick={() => navigate(routes.assets.detail(assignment.assetId))}
+              >
                 <TableTd className="font-medium">
                   {assignment.assetBrand ?? ''} {assignment.assetModel ?? assignment.assetSerial ?? ASSET_TYPE_LABELS[assignment.assetType]}
                 </TableTd>
                 <TableTd>{ASSET_TYPE_LABELS[assignment.assetType]}</TableTd>
                 <TableTd className="text-muted-foreground">{formatDate(assignment.assignedAt)}</TableTd>
-                <TableTd className="text-right">
+                <TableTd className="text-right" onClick={(e) => e.stopPropagation()}>
                   <Link to={routes.assets.detail(assignment.assetId)} className="text-sm font-medium text-primary-600 hover:underline">
                     View asset
                   </Link>

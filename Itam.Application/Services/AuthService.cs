@@ -15,6 +15,7 @@ public sealed class AuthService : IAuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly ISecureTokenGenerator _secureTokenGenerator;
+    private readonly ICurrentUserService _currentUserService;
     private readonly JwtSettings _jwtSettings;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<AuthService> _logger;
@@ -24,6 +25,7 @@ public sealed class AuthService : IAuthService
         IPasswordHasher passwordHasher,
         IJwtTokenGenerator jwtTokenGenerator,
         ISecureTokenGenerator secureTokenGenerator,
+        ICurrentUserService currentUserService,
         IOptions<JwtSettings> jwtSettings,
         TimeProvider timeProvider,
         ILogger<AuthService> logger)
@@ -32,6 +34,7 @@ public sealed class AuthService : IAuthService
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
         _secureTokenGenerator = secureTokenGenerator;
+        _currentUserService = currentUserService;
         _jwtSettings = jwtSettings.Value;
         _timeProvider = timeProvider;
         _logger = logger;
@@ -126,6 +129,30 @@ public sealed class AuthService : IAuthService
             await _dbContext.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("User {UserId} logged out.", token.UserId);
         }
+    }
+
+    public async Task ChangePasswordAsync(ChangePasswordRequestDto request, CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.UserId
+            ?? throw new UnauthorizedException("You must be authenticated.");
+
+        var user = await _dbContext.Users.SingleOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            ?? throw new UnauthorizedException("You must be authenticated.");
+
+        if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            _logger.LogWarning("Failed change-password attempt for user {UserId}: incorrect current password.", userId);
+            throw new BusinessRuleViolationException("Current password is incorrect.");
+        }
+
+        user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+
+        // Force re-authentication everywhere else; the caller's short-lived access token
+        // keeps working until it naturally expires.
+        await RevokeAllUserTokensAsync(userId, "Password changed", cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("User {UserId} changed their own password.", userId);
     }
 
     private RefreshToken CreateRefreshToken(Guid userId)

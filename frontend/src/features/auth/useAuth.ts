@@ -5,7 +5,7 @@ import { authService } from '@/services/authService';
 import { useAuthStore } from '@/stores/auth-store';
 import { getErrorMessage } from '@/lib/api-client';
 import { routes } from '@/routes/routes';
-import type { LoginRequest } from '@/types';
+import type { ChangePasswordRequest, LoginRequest } from '@/types';
 
 export function useAuth() {
   const { user, accessToken, isHydrated, clearAuth, setAuth } = useAuthStore();
@@ -49,6 +49,15 @@ export function useLogout() {
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (payload: ChangePasswordRequest) => authService.changePassword(payload),
+    onSuccess: () => {
+      toast.success('Password changed successfully.');
     },
   });
 }

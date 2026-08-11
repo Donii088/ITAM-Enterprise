@@ -13,6 +13,11 @@ export interface LogoutRequest {
   refreshToken: string;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface AuthUser {
   id: string;
   firstName: string;

@@ -38,6 +38,14 @@ public sealed class AssignmentsController : ControllerBase
         return Ok(ApiResponse.Ok(assignment, "Asset unassigned successfully."));
     }
 
+    [HttpPost("asset/{assetId:guid}/unassign")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
+    public async Task<ActionResult<ApiResponse<AssignmentDto>>> UnassignByAsset(Guid assetId, CancellationToken cancellationToken)
+    {
+        var assignment = await _assignmentService.UnassignByAssetAsync(assetId, cancellationToken);
+        return Ok(ApiResponse.Ok(assignment, "Asset unassigned successfully."));
+    }
+
     [HttpGet("my-assets")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<AssignmentDto>>>> GetMyAssets(CancellationToken cancellationToken)
     {

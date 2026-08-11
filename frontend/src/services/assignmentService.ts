@@ -11,6 +11,9 @@ export const assignmentService = {
 
   unassign: (id: string) => unwrapResponse<Assignment>(apiClient.post(`/assignments/${id}/unassign`)),
 
+  unassignByAsset: (assetId: string) =>
+    unwrapResponse<Assignment>(apiClient.post(`/assignments/asset/${assetId}/unassign`)),
+
   getMyAssets: () => unwrapResponse<Assignment[]>(apiClient.get('/assignments/my-assets')),
 
   getAssetHistory: (assetId: string) =>

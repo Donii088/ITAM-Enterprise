@@ -18,6 +18,11 @@ public interface IAssetService
     Task<AssetDetailsDto> UpdateKeyboardMouseSetAsync(Guid id, UpdateKeyboardMouseSetRequestDto request, CancellationToken ct = default);
 
     Task<AssetDetailsDto> GetDetailsAsync(Guid id, CancellationToken ct = default);
+    /// <summary>
+    /// Same as <see cref="GetDetailsAsync"/> but enforces that a non-admin caller may only view
+    /// an asset that is (or has been) assigned to them.
+    /// </summary>
+    Task<AssetDetailsDto> GetDetailsForViewerAsync(Guid id, CancellationToken ct = default);
     Task<PagedResult<AssetListItemDto>> GetPagedAsync(GetAssetsQuery query, CancellationToken ct = default);
     Task<AssetDetailsDto> UpdateStatusAsync(Guid id, UpdateAssetStatusRequestDto request, CancellationToken ct = default);
     Task HardDeleteAsync(Guid id, CancellationToken ct = default);

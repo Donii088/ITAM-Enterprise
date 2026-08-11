@@ -1,11 +1,10 @@
-import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff } from 'lucide-react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { FormInput } from '@/components/shared/form/FormInput';
 import { FormSelect } from '@/components/shared/form/FormSelect';
+import { FormPasswordInput } from '@/components/shared/form/FormPasswordInput';
 import { createUserSchema, updateUserSchema, type CreateUserFormValues, type UpdateUserFormValues } from '@/features/users/schemas';
 import { useCreateUser, useUpdateUser } from '@/features/users/useUsers';
 import { ROLE, ROLE_LABELS, type User } from '@/types';
@@ -19,15 +18,15 @@ export interface UserFormDialogProps {
 }
 
 function CreateForm({ onDone }: { onDone: () => void }) {
-  const [showPassword, setShowPassword] = React.useState(false);
   const createUser = useCreateUser();
   const { control, handleSubmit, formState } = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { firstName: '', lastName: '', email: '', jobTitle: '', role: ROLE.Employee, password: '' },
+    defaultValues: { firstName: '', lastName: '', email: '', jobTitle: '', role: ROLE.Employee, password: '', confirmPassword: '' },
   });
 
   function onSubmit(values: CreateUserFormValues) {
-    createUser.mutateAsync(values).then(onDone).catch(() => undefined);
+    const { confirmPassword: _confirmPassword, ...payload } = values;
+    createUser.mutateAsync(payload).then(onDone).catch(() => undefined);
   }
 
   return (
@@ -38,24 +37,16 @@ function CreateForm({ onDone }: { onDone: () => void }) {
         <FormInput control={control} name="email" label="Email" type="email" required className="sm:col-span-2" />
         <FormInput control={control} name="jobTitle" label="Job title" required className="sm:col-span-2" />
         <FormSelect control={control} name="role" label="Role" options={ROLE_OPTIONS} required />
-        <FormInput
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FormPasswordInput
           control={control}
           name="password"
           label="Password"
-          type={showPassword ? 'text' : 'password'}
           required
           hint="At least 8 characters, with uppercase, lowercase, and a digit."
-          rightElement={
-            <button
-              type="button"
-              onClick={() => setShowPassword((s) => !s)}
-              className="focus-ring rounded p-1 text-muted-foreground hover:text-foreground"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          }
         />
+        <FormPasswordInput control={control} name="confirmPassword" label="Confirm password" required />
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone} disabled={formState.isSubmitting}>
@@ -79,11 +70,17 @@ function EditForm({ user, onDone }: { user: User; onDone: () => void }) {
       email: user.email,
       jobTitle: user.jobTitle,
       role: user.role,
+      newPassword: '',
+      confirmPassword: '',
     },
   });
 
   function onSubmit(values: UpdateUserFormValues) {
-    updateUser.mutateAsync({ id: user.id, payload: values }).then(onDone).catch(() => undefined);
+    const { confirmPassword: _confirmPassword, newPassword, ...rest } = values;
+    updateUser
+      .mutateAsync({ id: user.id, payload: { ...rest, newPassword: newPassword || undefined } })
+      .then(onDone)
+      .catch(() => undefined);
   }
 
   return (
@@ -95,6 +92,23 @@ function EditForm({ user, onDone }: { user: User; onDone: () => void }) {
         <FormInput control={control} name="jobTitle" label="Job title" required className="sm:col-span-2" />
         <FormSelect control={control} name="role" label="Role" options={ROLE_OPTIONS} required />
       </div>
+
+      <div className="space-y-4 rounded-lg border border-border p-3">
+        <p className="text-sm font-medium text-foreground">Reset password (optional)</p>
+        <p className="-mt-2 text-xs text-muted-foreground">
+          Leave both fields blank to keep the user's current password.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormPasswordInput
+            control={control}
+            name="newPassword"
+            label="New password"
+            hint="At least 8 characters, with uppercase, lowercase, and a digit."
+          />
+          <FormPasswordInput control={control} name="confirmPassword" label="Confirm new password" />
+        </div>
+      </div>
+
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone} disabled={formState.isSubmitting}>
           Cancel

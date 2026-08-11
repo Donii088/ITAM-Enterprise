@@ -10,7 +10,7 @@ namespace Itam.WebApi.Controllers;
 
 [ApiController]
 [Route("api/assets")]
-[Authorize(Roles = RoleConstants.ItAdmin)]
+[Authorize]
 public sealed class AssetsController : ControllerBase
 {
     private readonly IAssetService _assetService;
@@ -21,6 +21,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<PagedResult<AssetListItemDto>>>> Get(
         [FromQuery] GetAssetsQuery query, CancellationToken cancellationToken)
     {
@@ -28,14 +29,17 @@ public sealed class AssetsController : ControllerBase
         return Ok(ApiResponse.Ok(result, "Assets retrieved successfully."));
     }
 
+    // Any authenticated user may fetch a single asset's details; employees are scoped to
+    // assets that are or were assigned to them inside GetDetailsForViewerAsync.
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var asset = await _assetService.GetDetailsAsync(id, cancellationToken);
+        var asset = await _assetService.GetDetailsForViewerAsync(id, cancellationToken);
         return Ok(ApiResponse.Ok(asset, "Asset retrieved successfully."));
     }
 
     [HttpPost("laptops")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> CreateLaptop(
         [FromBody] CreateLaptopRequestDto request, CancellationToken cancellationToken)
     {
@@ -44,6 +48,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPost("desktops")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> CreateDesktopPc(
         [FromBody] CreateDesktopPcRequestDto request, CancellationToken cancellationToken)
     {
@@ -52,6 +57,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPost("monitors")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> CreateMonitor(
         [FromBody] CreateMonitorRequestDto request, CancellationToken cancellationToken)
     {
@@ -60,6 +66,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPost("docks")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> CreateDock(
         [FromBody] CreateDockRequestDto request, CancellationToken cancellationToken)
     {
@@ -68,6 +75,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPost("keyboard-mouse-sets")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> CreateKeyboardMouseSet(
         [FromBody] CreateKeyboardMouseSetRequestDto request, CancellationToken cancellationToken)
     {
@@ -76,6 +84,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPut("laptops/{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> UpdateLaptop(
         Guid id, [FromBody] UpdateLaptopRequestDto request, CancellationToken cancellationToken)
     {
@@ -84,6 +93,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPut("desktops/{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> UpdateDesktopPc(
         Guid id, [FromBody] UpdateDesktopPcRequestDto request, CancellationToken cancellationToken)
     {
@@ -92,6 +102,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPut("monitors/{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> UpdateMonitor(
         Guid id, [FromBody] UpdateMonitorRequestDto request, CancellationToken cancellationToken)
     {
@@ -100,6 +111,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPut("docks/{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> UpdateDock(
         Guid id, [FromBody] UpdateDockRequestDto request, CancellationToken cancellationToken)
     {
@@ -108,6 +120,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPut("keyboard-mouse-sets/{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> UpdateKeyboardMouseSet(
         Guid id, [FromBody] UpdateKeyboardMouseSetRequestDto request, CancellationToken cancellationToken)
     {
@@ -116,6 +129,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/status")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> UpdateStatus(
         Guid id, [FromBody] UpdateAssetStatusRequestDto request, CancellationToken cancellationToken)
     {
@@ -124,6 +138,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpGet("storage")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<PagedResult<StorageDto>>>> GetStorage(
     [FromQuery] GetStorageQuery query, CancellationToken cancellationToken)
     {
@@ -132,6 +147,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpGet("storage/{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<StorageDto>>> GetStorageById(
         Guid id, CancellationToken cancellationToken)
     {
@@ -141,6 +157,7 @@ public sealed class AssetsController : ControllerBase
 
 
     [HttpPost("storage")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<StorageDto>>> CreateStorage(
         [FromBody] CreateStorageRequestDto request, CancellationToken cancellationToken)
     {
@@ -149,6 +166,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpPut("storage/{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<StorageDto>>> UpdateStorage(
         Guid id, [FromBody] UpdateStorageRequestDto request, CancellationToken cancellationToken)
     {
@@ -157,6 +175,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpDelete("storage/{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse>> DeleteStorage(Guid id, CancellationToken cancellationToken)
     {
         await _assetService.DeleteStorageAsync(id, cancellationToken);
@@ -164,6 +183,7 @@ public sealed class AssetsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse>> HardDelete(Guid id, CancellationToken cancellationToken)
     {
         await _assetService.HardDeleteAsync(id, cancellationToken);

@@ -12,5 +12,11 @@ public sealed class UpdateUserRequestValidator : AbstractValidator<UpdateUserReq
         RuleFor(x => x.JobTitle).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Role).IsInEnum();
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(256);
+
+        // Admins may optionally reset another user's password from the edit form; when left
+        // blank the existing password hash is untouched.
+        RuleFor(x => x.NewPassword!)
+            .MustBeStrongPassword()
+            .When(x => !string.IsNullOrEmpty(x.NewPassword));
     }
 }
