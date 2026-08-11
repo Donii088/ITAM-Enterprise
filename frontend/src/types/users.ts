@@ -29,6 +29,7 @@ export interface UpdateUserRequest {
   email: string;
   jobTitle: string;
   role: Role;
+  newPassword?: string | null;
 }
 
 export interface GetUsersQuery extends PagedQuery {

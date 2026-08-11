@@ -107,6 +107,13 @@ public sealed class UserService : IUserService
         }
 
         _mapper.Map(request, user);
+
+        if (!string.IsNullOrEmpty(request.NewPassword))
+        {
+            user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+            _logger.LogInformation("User {UserId} password reset by an administrator.", user.Id);
+        }
+
         await SaveWithDuplicateEmailGuardAsync(cancellationToken);
 
         _logger.LogInformation("User {UserId} updated.", user.Id);

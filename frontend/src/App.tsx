@@ -64,12 +64,12 @@ export default function App() {
             <Route path={routes.profile} element={withSuspense(<ProfilePage />)} />
             <Route path={routes.search} element={withSuspense(<SearchPage />)} />
             <Route path={routes.myAssets} element={withSuspense(<MyAssetsPage />)} />
+            <Route path={routes.assets.detail(':id')} element={withSuspense(<AssetDetailPage />)} />
             <Route path={routes.tickets.mine} element={withSuspense(<MyTicketsPage />)} />
             <Route path={routes.tickets.detail(':id')} element={withSuspense(<TicketDetailPage />)} />
 
             <Route element={<RoleRoute allow={[ROLES.ITADMIN]} />}>
               <Route path={routes.assets.list} element={withSuspense(<AssetsListPage />)} />
-              <Route path={routes.assets.detail(':id')} element={withSuspense(<AssetDetailPage />)} />
               <Route path={routes.assignments.list} element={withSuspense(<AssignmentsListPage />)} />
               <Route path={routes.tickets.list} element={withSuspense(<TicketsListPage />)} />
               <Route path={routes.repairs.list} element={withSuspense(<RepairsListPage />)} />

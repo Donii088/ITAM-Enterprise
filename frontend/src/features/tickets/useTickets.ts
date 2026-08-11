@@ -14,11 +14,12 @@ export function useTicketsList(query: GetTicketsQuery) {
   });
 }
 
-export function useMyTickets(query: GetTicketsQuery) {
+export function useMyTickets(query: GetTicketsQuery, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.tickets.myTickets(query),
     queryFn: () => ticketService.getMyTickets(query),
     placeholderData: keepPreviousData,
+    enabled: options?.enabled ?? true,
   });
 }
 

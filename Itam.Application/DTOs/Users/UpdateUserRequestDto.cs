@@ -7,4 +7,5 @@ public sealed record UpdateUserRequestDto(
     string LastName,
     string Email,
     string JobTitle,
-    Role Role);
+    Role Role,
+    string? NewPassword = null);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Boxes,
   Download,
@@ -9,6 +9,7 @@ import {
   Plus,
   RefreshCcw,
   Trash2,
+  UserX,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
@@ -33,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
 import { useAsset, useAssetsList, useHardDeleteAsset, useExportAssets, useStorageList, useDeleteStorage } from '@/features/assets/useAssets';
+import { useUnassignAssetByAssetId } from '@/features/assignments/useAssignments';
 import { AssetFormDialog } from './components/AssetFormDialog';
 import { AssetStatusDialog } from './components/AssetStatusDialog';
 import { StorageFormDialog } from './components/StorageFormDialog';
@@ -52,12 +54,15 @@ import {
 const DEFAULT_PAGE_SIZE = Number(import.meta.env.VITE_DEFAULT_PAGE_SIZE) || 10;
 
 function DevicesTab() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
   const [createType, setCreateType] = useState<AssetType | undefined>();
   const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
   const [statusTarget, setStatusTarget] = useState<AssetListItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AssetListItem | null>(null);
+  const [unassignTarget, setUnassignTarget] = useState<AssetListItem | null>(null);
+  const unassignAsset = useUnassignAssetByAssetId();
 
   const query = useMemo(
     () => ({
@@ -186,52 +191,62 @@ function DevicesTab() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data?.items.map((asset) => (
-                  <TableRow key={asset.id}>
-                    <TableTd className="font-medium">
-                      <Link to={routes.assets.detail(asset.id)} className="hover:text-primary-600 hover:underline">
-                        {asset.brand ?? ''} {asset.model ?? ''}
-                      </Link>
-                    </TableTd>
-                    <TableTd>{ASSET_TYPE_LABELS[asset.assetType]}</TableTd>
-                    <TableTd className="text-muted-foreground">{asset.serialNumber ?? '—'}</TableTd>
-                    <TableTd><AssetStatusBadge status={asset.status} /></TableTd>
-                    <TableTd className="text-muted-foreground">{asset.assignedEmployeeName ?? '—'}</TableTd>
-                    <TableTd className="text-muted-foreground">{formatDate(asset.createdAt)}</TableTd>
-                    <TableTd className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Actions for ${asset.brand ?? 'asset'}`}>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem asChild>
-                            <Link to={routes.assets.detail(asset.id)}>
-                              <Eye className="h-4 w-4" /> View details
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setCreateType(asset.assetType);
-                              setEditingAssetId(asset.id);
-                              setFormOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setStatusTarget(asset)}>
-                            <RefreshCcw className="h-4 w-4" /> Change status
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem destructive onClick={() => setDeleteTarget(asset)}>
-                            <Trash2 className="h-4 w-4" /> Delete permanently
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableTd>
-                  </TableRow>
-                ))}
+                {data?.items.map((asset) => {
+                  const isAssigned = asset.status === ASSET_STATUS.Assigned && Boolean(asset.assignedEmployeeName);
+                  return (
+                    <TableRow
+                      key={asset.id}
+                      className="cursor-pointer"
+                      onClick={() => navigate(routes.assets.detail(asset.id))}
+                    >
+                      <TableTd className="font-medium">
+                        <span className="hover:text-primary-600 hover:underline">
+                          {asset.brand ?? ''} {asset.model ?? ''}
+                        </span>
+                      </TableTd>
+                      <TableTd>{ASSET_TYPE_LABELS[asset.assetType]}</TableTd>
+                      <TableTd className="text-muted-foreground">{asset.serialNumber ?? '—'}</TableTd>
+                      <TableTd><AssetStatusBadge status={asset.status} /></TableTd>
+                      <TableTd className="text-muted-foreground">{asset.assignedEmployeeName ?? '—'}</TableTd>
+                      <TableTd className="text-muted-foreground">{formatDate(asset.createdAt)}</TableTd>
+                      <TableTd className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Actions for ${asset.brand ?? 'asset'}`}>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem asChild>
+                              <Link to={routes.assets.detail(asset.id)}>
+                                <Eye className="h-4 w-4" /> View details
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setCreateType(asset.assetType);
+                                setEditingAssetId(asset.id);
+                                setFormOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setStatusTarget(asset)}>
+                              <RefreshCcw className="h-4 w-4" /> Change status
+                            </DropdownMenuItem>
+                            <DropdownMenuItem disabled={!isAssigned} onClick={() => setUnassignTarget(asset)}>
+                              <UserX className="h-4 w-4" /> Unassign
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem destructive onClick={() => setDeleteTarget(asset)}>
+                              <Trash2 className="h-4 w-4" /> Delete permanently
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableTd>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </TableContainer>
             {data && (
@@ -275,6 +290,18 @@ function DevicesTab() {
         isLoading={deleteAsset.isPending}
         onConfirm={() => {
           if (deleteTarget) deleteAsset.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+        }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(unassignTarget)}
+        onOpenChange={(open) => !open && setUnassignTarget(null)}
+        title="Unassign asset"
+        description={`Unassign "${unassignTarget?.brand ?? ''} ${unassignTarget?.model ?? unassignTarget?.serialNumber ?? ''}" from ${unassignTarget?.assignedEmployeeName ?? 'its current holder'}? The asset will become available again.`}
+        confirmLabel="Unassign"
+        isLoading={unassignAsset.isPending}
+        onConfirm={() => {
+          if (unassignTarget) unassignAsset.mutate(unassignTarget.id, { onSuccess: () => setUnassignTarget(null) });
         }}
       />
     </div>

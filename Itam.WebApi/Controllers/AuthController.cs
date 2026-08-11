@@ -46,4 +46,14 @@ public sealed class AuthController : ControllerBase
         await _authService.LogoutAsync(request, cancellationToken);
         return Ok(ApiResponse.Ok("Logout successful."));
     }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<ActionResult<ApiResponse>> ChangePassword(
+        [FromBody] ChangePasswordRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        await _authService.ChangePasswordAsync(request, cancellationToken);
+        return Ok(ApiResponse.Ok("Password changed successfully."));
+    }
 }

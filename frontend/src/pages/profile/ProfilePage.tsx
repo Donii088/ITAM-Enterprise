@@ -1,13 +1,107 @@
 import { useEffect } from 'react';
-import { Mail, Briefcase, ShieldCheck, LogOut } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Mail, Briefcase, ShieldCheck, LogOut, KeyRound } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
-import { useAuth, useLogout } from '@/features/auth/useAuth';
+import { FormPasswordInput } from '@/components/shared/form/FormPasswordInput';
+import { useAuth, useChangePassword, useLogout } from '@/features/auth/useAuth';
+import { getErrorMessage } from '@/lib/api-client';
+import { passwordSchema } from '@/lib/validation';
 import { ROLE_LABELS } from '@/types';
+
+const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password'),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, 'Confirm your new password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+  .refine((data) => data.newPassword !== data.currentPassword, {
+    message: 'New password must be different from your current password',
+    path: ['newPassword'],
+  });
+type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
+
+function ChangePasswordCard() {
+  const changePassword = useChangePassword();
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
+
+  function onSubmit(values: ChangePasswordFormValues) {
+    changePassword.mutate(
+      { currentPassword: values.currentPassword, newPassword: values.newPassword },
+      {
+        onSuccess: () => reset(),
+        onError: (error) => {
+          const message = getErrorMessage(error, 'Could not change your password.');
+          if (message.toLowerCase().includes('current password')) {
+            setError('currentPassword', { message });
+          } else {
+            setError('root', { message });
+          }
+        },
+      },
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-muted-foreground" /> Change password
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {errors.root && (
+          <Alert variant="danger" title="Could not change your password">
+            {errors.root.message}
+          </Alert>
+        )}
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          <FormPasswordInput
+            control={control}
+            name="currentPassword"
+            label="Current password"
+            required
+            autoComplete="current-password"
+          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormPasswordInput
+              control={control}
+              name="newPassword"
+              label="New password"
+              required
+              hint="At least 8 characters, with uppercase, lowercase, and a digit."
+            />
+            <FormPasswordInput control={control} name="confirmPassword" label="Confirm new password" required />
+          </div>
+          <div className="flex justify-end">
+            <Button type="submit" isLoading={isSubmitting || changePassword.isPending}>
+              Update password
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -73,10 +167,12 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Alert variant="info" title="Profile editing & password changes">
-        Updating your personal details or password isn't available yet — the API doesn't expose a self-service
-        profile endpoint. Contact your IT administrator to update this information.
+      <Alert variant="info" title="Editing other profile information">
+        Updating your name, email, job title, or role isn't available here — contact your IT administrator to change
+        those details.
       </Alert>
+
+      <ChangePasswordCard />
 
       <Card>
         <CardContent className="flex items-center justify-between">

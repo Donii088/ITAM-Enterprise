@@ -61,6 +61,18 @@ export function useUnassignAsset() {
   });
 }
 
+export function useUnassignAssetByAssetId() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (assetId: string) => assignmentService.unassignByAsset(assetId),
+    onSuccess: () => {
+      invalidateAssignmentRelated(queryClient);
+      toast.success('Asset unassigned successfully.');
+    },
+    onError: (error) => toast.error(getErrorMessage(error, 'Could not unassign the asset.')),
+  });
+}
+
 export function useExportAssignments() {
   return useMutation({
     mutationFn: (query: GetAssignmentsQuery) => exportService.exportAssignments(query),
