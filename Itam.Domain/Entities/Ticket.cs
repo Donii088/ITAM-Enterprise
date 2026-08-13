@@ -18,7 +18,6 @@ public class Ticket : BaseEntity
     public Guid AssetId { get; set; }
     public Asset Asset { get; set; } = null!;
 
-    // Navigation Properties
     public ICollection<RepairHistory> RepairHistories { get; set; } = new List<RepairHistory>();
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 }

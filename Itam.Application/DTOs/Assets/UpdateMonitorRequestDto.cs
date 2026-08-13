@@ -1,4 +1,3 @@
-// UpdateMonitorRequestDto.cs
 namespace Itam.Application.DTOs.Assets;
 
 public sealed record UpdateMonitorRequestDto(

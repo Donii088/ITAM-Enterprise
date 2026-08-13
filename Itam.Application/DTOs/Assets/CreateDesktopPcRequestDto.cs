@@ -1,4 +1,3 @@
-// CreateDesktopPcRequestDto.cs
 namespace Itam.Application.DTOs.Assets;
 
 public sealed record CreateDesktopPcRequestDto(

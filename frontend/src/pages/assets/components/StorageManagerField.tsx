@@ -193,11 +193,10 @@ function CreateStorageInlineDialog({
         </DialogHeader>
         <form
           onSubmit={(e) => {
-            // See the comment in StorageAttachField's predecessor: this dialog can be opened
-            // from inside the outer asset form, and React re-dispatches events along the
-            // component tree even though Radix portals this content elsewhere in the DOM.
-            // Without stopping propagation, submitting this inner form would also submit
-            // the outer asset form.
+            // This dialog can be opened from inside the outer asset form, and React
+            // re-dispatches events along the component tree even though Radix portals this
+            // content elsewhere in the DOM. Without stopping propagation, submitting this
+            // inner form would also submit the outer asset form.
             e.stopPropagation();
             handleSubmit(onSubmit)(e);
           }}
