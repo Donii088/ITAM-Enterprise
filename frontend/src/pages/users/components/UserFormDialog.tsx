@@ -7,6 +7,7 @@ import { FormSelect } from '@/components/shared/form/FormSelect';
 import { FormPasswordInput } from '@/components/shared/form/FormPasswordInput';
 import { createUserSchema, updateUserSchema, type CreateUserFormValues, type UpdateUserFormValues } from '@/features/users/schemas';
 import { useCreateUser, useUpdateUser } from '@/features/users/useUsers';
+import { useAuth } from '@/features/auth/useAuth';
 import { ROLE, ROLE_LABELS, type User } from '@/types';
 
 const ROLE_OPTIONS = Object.values(ROLE).map((v) => ({ value: v, label: ROLE_LABELS[v] }));
@@ -61,6 +62,8 @@ function CreateForm({ onDone }: { onDone: () => void }) {
 }
 
 function EditForm({ user, onDone }: { user: User; onDone: () => void }) {
+  const { user: currentUser } = useAuth();
+  const isSelf = currentUser?.id === user.id;
   const updateUser = useUpdateUser();
   const { control, handleSubmit, formState } = useForm<UpdateUserFormValues>({
     resolver: zodResolver(updateUserSchema),
@@ -90,7 +93,15 @@ function EditForm({ user, onDone }: { user: User; onDone: () => void }) {
         <FormInput control={control} name="lastName" label="Last name" required />
         <FormInput control={control} name="email" label="Email" type="email" required className="sm:col-span-2" />
         <FormInput control={control} name="jobTitle" label="Job title" required className="sm:col-span-2" />
-        <FormSelect control={control} name="role" label="Role" options={ROLE_OPTIONS} required />
+        <FormSelect
+          control={control}
+          name="role"
+          label="Role"
+          options={ROLE_OPTIONS}
+          required
+          disabled={isSelf}
+          hint={isSelf ? 'You cannot change your own role. Another admin must change it.' : undefined}
+        />
       </div>
 
       <div className="space-y-4 rounded-lg border border-border p-3">

@@ -15,6 +15,7 @@ public sealed class UserService : IUserService
     private readonly IApplicationDbContext _dbContext;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IMapper _mapper;
+    private readonly ICurrentUserService _currentUserService;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<UserService> _logger;
 
@@ -22,12 +23,14 @@ public sealed class UserService : IUserService
         IApplicationDbContext dbContext,
         IPasswordHasher passwordHasher,
         IMapper mapper,
+        ICurrentUserService currentUserService,
         TimeProvider timeProvider,
         ILogger<UserService> logger)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
         _mapper = mapper;
+        _currentUserService = currentUserService;
         _timeProvider = timeProvider;
         _logger = logger;
     }
@@ -99,6 +102,12 @@ public sealed class UserService : IUserService
     {
         var user = await _dbContext.Users.SingleOrDefaultAsync(u => u.Id == id, cancellationToken)
             ?? throw new EntityNotFoundException(nameof(User), id);
+
+        if (_currentUserService.UserId == id && request.Role != user.Role)
+        {
+            throw new BusinessRuleViolationException(
+                "You cannot change your own role. Another administrator must change it.");
+        }
 
         if (!user.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase) &&
             await _dbContext.Users.AnyAsync(u => u.Email == request.Email && u.Id != id, cancellationToken))
