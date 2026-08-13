@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Briefcase, ShieldCheck, LogOut, KeyRound } from 'lucide-react';
+import { Mail, Briefcase, ShieldCheck, LogOut, KeyRound, Edit } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
@@ -10,9 +10,12 @@ import { Badge } from '@/components/ui/Badge';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { FormPasswordInput } from '@/components/shared/form/FormPasswordInput';
+import { UserFormDialog } from '@/pages/users/components/UserFormDialog';
 import { useAuth, useChangePassword, useLogout } from '@/features/auth/useAuth';
+import { useUser } from '@/features/users/useUsers';
 import { getErrorMessage } from '@/lib/api-client';
 import { passwordSchema } from '@/lib/validation';
+import { isItAdmin } from '@/lib/permissions';
 import { ROLE_LABELS } from '@/types';
 
 const changePasswordSchema = z
@@ -106,6 +109,9 @@ function ChangePasswordCard() {
 export default function ProfilePage() {
   const { user } = useAuth();
   const logout = useLogout();
+  const admin = isItAdmin(user?.role);
+  const { data: fullUser } = useUser(admin ? user?.id : undefined);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     document.title = 'Profile — ITAM Enterprise';
@@ -117,7 +123,17 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title="Profile" description="Your account details as registered in ITAM Enterprise." />
+      <PageHeader
+        title="Profile"
+        description="Your account details as registered in ITAM Enterprise."
+        actions={
+          admin ? (
+            <Button size="sm" leftIcon={<Edit className="h-4 w-4" />} onClick={() => setEditOpen(true)} disabled={!fullUser}>
+              Edit profile
+            </Button>
+          ) : undefined
+        }
+      />
 
       <Card>
         <CardContent className="flex flex-col items-center gap-3 py-8 text-center sm:flex-row sm:text-left">
@@ -167,10 +183,12 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Alert variant="info" title="Editing other profile information">
-        Updating your name, email, job title, or role isn't available here — contact your IT administrator to change
-        those details.
-      </Alert>
+      {!admin && (
+        <Alert variant="info" title="Editing profile information">
+          Your name, email, job title, and role can only be changed by an IT administrator. You can update your
+          password below.
+        </Alert>
+      )}
 
       <ChangePasswordCard />
 
@@ -185,6 +203,8 @@ export default function ProfilePage() {
           </Button>
         </CardContent>
       </Card>
+
+      {admin && fullUser && <UserFormDialog open={editOpen} onOpenChange={setEditOpen} user={fullUser} />}
     </div>
   );
 }

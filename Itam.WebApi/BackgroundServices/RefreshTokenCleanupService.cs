@@ -50,12 +50,10 @@ public sealed class RefreshTokenCleanupService : BackgroundService
 
         var now = _timeProvider.GetUtcNow().UtcDateTime;
 
-        // 1. Expired tokens (older than 30 days past their expiry date)
         var expired = await dbContext.RefreshTokens
             .Where(t => t.Expires < now.AddDays(-30))
             .ToListAsync(ct);
 
-        // 2. Revoked tokens (older than 30 days since they were revoked)
         var oldRevoked = await dbContext.RefreshTokens
             .Where(t => t.Revoked != null && t.Revoked < now.AddDays(-30))
             .ToListAsync(ct);

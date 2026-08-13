@@ -1,4 +1,3 @@
-// AssetListItemDto.cs
 using Itam.Domain.Enums;
 namespace Itam.Application.DTOs.Assets;
 

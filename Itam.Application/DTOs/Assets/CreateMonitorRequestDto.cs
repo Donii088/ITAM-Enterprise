@@ -1,4 +1,3 @@
-// CreateMonitorRequestDto.cs
 namespace Itam.Application.DTOs.Assets;
 
 public sealed record CreateMonitorRequestDto(

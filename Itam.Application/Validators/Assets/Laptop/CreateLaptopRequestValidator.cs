@@ -8,7 +8,7 @@ namespace Itam.Application.Validators.Assets.Laptop
 {
     public sealed class CreateLaptopRequestValidator : AbstractValidator<CreateLaptopRequestDto>
     {
-        public CreateLaptopRequestValidator() // removed IApplicationDbContext param
+        public CreateLaptopRequestValidator()
         {
             RuleFor(x => x.SerialNumber).NotEmpty().MaximumLength(150);
             RuleFor(x => x.Brand).NotEmpty().MaximumLength(100);

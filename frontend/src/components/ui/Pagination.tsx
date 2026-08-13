@@ -31,17 +31,19 @@ export function Pagination({
   return (
     <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>
+        <span className="whitespace-nowrap">
           {totalCount === 0 ? 'No results' : `${startItem}–${endItem} of ${totalCount}`}
         </span>
         <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
-          <SelectTrigger className="h-8 w-[90px]" aria-label="Rows per page">
-            <SelectValue />
+          <SelectTrigger className="h-8 w-[112px] shrink-0 px-2.5 text-sm" aria-label="Rows per page">
+            <span className="truncate">
+              <SelectValue />
+            </span>
           </SelectTrigger>
           <SelectContent>
             {pageSizeOptions.map((size) => (
               <SelectItem key={size} value={String(size)}>
-                {size} / page
+                {size}/page
               </SelectItem>
             ))}
           </SelectContent>

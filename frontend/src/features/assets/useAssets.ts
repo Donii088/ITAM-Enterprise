@@ -139,7 +139,7 @@ export function useDeleteStorage() {
 }
 
 /**
- * Attaches an existing (unassigned) storage device to a just-created Laptop/DesktopPc.
+ * Attaches (or detaches, when both ids are omitted) a storage device to a Laptop/DesktopPc.
  * UpdateStorageRequest requires every field, so this reads the current device first and
  * only overrides the parent ids.
  */

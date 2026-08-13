@@ -1,4 +1,3 @@
-// UpdateDesktopPcRequestDto.cs
 namespace Itam.Application.DTOs.Assets;
 
 public sealed record UpdateDesktopPcRequestDto(

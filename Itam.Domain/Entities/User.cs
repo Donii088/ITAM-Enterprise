@@ -13,7 +13,6 @@ public class User : BaseEntity
     public bool IsActive { get; set; } = true;
     public DateTime? LastLoginAt { get; set; }
 
-    // Navigation Properties
     public ICollection<AssetAssignment> AssetAssignments { get; set; } = new List<AssetAssignment>();
     public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
     public ICollection<RepairHistory> RepairHistories { get; set; } = new List<RepairHistory>();
