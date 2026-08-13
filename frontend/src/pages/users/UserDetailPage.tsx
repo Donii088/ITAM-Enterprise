@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeftRight,
   Briefcase,
   Calendar,
   Clock,
+  Edit,
   History,
   Laptop,
   Mail,
@@ -14,6 +15,7 @@ import {
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { ActiveBadge, TicketPriorityBadge, TicketStatusBadge } from '@/components/ui/StatusBadge';
@@ -23,9 +25,12 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/Skeleton';
 import { TableContainer, TableHead, TableBody, TableRow, TableTh, TableTd } from '@/components/ui/Table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { UserFormDialog } from './components/UserFormDialog';
 import { useUser } from '@/features/users/useUsers';
 import { useAssignmentsList } from '@/features/assignments/useAssignments';
 import { useTicketsList } from '@/features/tickets/useTickets';
+import { useAuth } from '@/features/auth/useAuth';
+import { isItAdmin } from '@/lib/permissions';
 import { formatDate, formatDateTime } from '@/lib/formatters';
 import { routes } from '@/routes/routes';
 import { ASSET_TYPE_LABELS, ROLE, ROLE_LABELS, TICKET_STATUS } from '@/types';
@@ -46,6 +51,9 @@ function DetailField({ icon: Icon, label, value }: { icon: typeof Mail; label: s
 
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { user: currentUser } = useAuth();
+  const canEdit = isItAdmin(currentUser?.role);
+  const [editOpen, setEditOpen] = useState(false);
   const { data: user, isLoading, isError, error, refetch } = useUser(id);
 
   useEffect(() => {
@@ -69,6 +77,13 @@ export default function UserDetailPage() {
         title={fullName}
         description={user.jobTitle}
         breadcrumbs={<Breadcrumbs items={[{ label: 'Users', to: routes.users.list }, { label: fullName }]} />}
+        actions={
+          canEdit ? (
+            <Button size="sm" leftIcon={<Edit className="h-4 w-4" />} onClick={() => setEditOpen(true)}>
+              Edit
+            </Button>
+          ) : undefined
+        }
       />
 
       <Card>
@@ -121,6 +136,8 @@ export default function UserDetailPage() {
           <HistoryTab employeeId={user.id} />
         </TabsContent>
       </Tabs>
+
+      {canEdit && <UserFormDialog open={editOpen} onOpenChange={setEditOpen} user={user} />}
     </div>
   );
 }
