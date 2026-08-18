@@ -4,7 +4,7 @@ namespace Itam.Application.Interfaces;
 
 public interface IAttachmentService
 {
-    Task<AttachmentDto> UploadForTicketAsync(Guid ticketId, UploadAttachmentRequest request, Guid userId ,CancellationToken ct = default);
+    Task<AttachmentDto> UploadForTicketAsync(Guid ticketId, UploadAttachmentRequest request, CancellationToken ct = default);
     Task<AttachmentDto> UploadForRepairAsync(Guid repairId, UploadAttachmentRequest request, CancellationToken ct = default);
     Task<AttachmentDto> UploadForAssetAsync(Guid assetId, UploadAttachmentRequest request, CancellationToken ct = default);
 
