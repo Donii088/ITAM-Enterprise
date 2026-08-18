@@ -7,21 +7,24 @@ import { Alert } from '@/components/ui/Alert';
 import { FormInput } from '@/components/shared/form/FormInput';
 import { FormTextarea } from '@/components/shared/form/FormTextarea';
 import { FormSelect } from '@/components/shared/form/FormSelect';
-import { FormFileInput } from '@/components/shared/form/FormFileInput';
+import { MultiFileInput } from '@/components/shared/form/MultiFileInput';
 import { createTicketSchema, type CreateTicketFormValues } from '@/features/tickets/schemas';
 import { useCreateTicket } from '@/features/tickets/useTickets';
 import { useUploadTicketAttachment } from '@/features/attachments/useAttachments';
 import { useMyAssets } from '@/features/assignments/useAssignments';
 import { ALLOWED_PHOTO_EXTENSIONS, validatePhotoFile } from '@/lib/file-validation';
 import { TICKET_PRIORITY, ASSET_TYPE_LABELS } from '@/types';
+import { toast } from 'sonner';
 
 const PRIORITY_OPTIONS = Object.values(TICKET_PRIORITY).map((v) => ({ value: v, label: v }));
+const MAX_PHOTOS = 5;
 
 export function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const createTicket = useCreateTicket();
   const uploadAttachment = useUploadTicketAttachment();
   const { data: myAssets, isLoading: assetsLoading } = useMyAssets();
-  const [photo, setPhoto] = React.useState<File | null>(null);
+  const [photos, setPhotos] = React.useState<File[]>([]);
+  const [uploading, setUploading] = React.useState(false);
 
   const { control, handleSubmit, reset, formState } = useForm<CreateTicketFormValues>({
     resolver: zodResolver(createTicketSchema),
@@ -42,14 +45,25 @@ export function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOp
       return;
     }
 
-    if (photo) {
-      // The mutation itself surfaces a toast on success/failure; a failed photo upload
-      // shouldn't block closing the dialog since the ticket was already created.
-      await uploadAttachment.mutateAsync({ entityId: ticket.id, file: photo }).catch(() => undefined);
+    if (photos.length > 0) {
+      setUploading(true);
+      // The upload mutation itself surfaces a toast per file; a failed photo upload shouldn't
+      // block closing the dialog since the ticket was already created successfully.
+      const results = await Promise.allSettled(
+        photos.map((file) => uploadAttachment.mutateAsync({ entityId: ticket.id, file })),
+      );
+      setUploading(false);
+
+      const failedCount = results.filter((r) => r.status === 'rejected').length;
+      if (failedCount > 0) {
+        toast.error(
+          `Ticket created, but ${failedCount} of ${photos.length} photo${photos.length === 1 ? '' : 's'} failed to upload. You can add them from the ticket page.`,
+        );
+      }
     }
 
     reset();
-    setPhoto(null);
+    setPhotos([]);
     onOpenChange(false);
   }
 
@@ -85,22 +99,23 @@ export function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOp
               required
             />
             <FormSelect control={control} name="priority" label="Priority" options={PRIORITY_OPTIONS} required />
-            <FormFileInput
-              label="Photo"
-              hint="Optional — attach a photo of the issue"
-              file={photo}
-              onChange={setPhoto}
+            <MultiFileInput
+              label="Photos"
+              hint={`Optional — attach up to ${MAX_PHOTOS} photos of the issue`}
+              files={photos}
+              onChange={setPhotos}
               accept={ALLOWED_PHOTO_EXTENSIONS}
               validate={validatePhotoFile}
-              browseLabel="Click to upload a photo"
-              helpText="JPG, PNG or WEBP — up to 5MB"
-              disabled={formState.isSubmitting}
+              browseLabel="Click to upload photos"
+              helpText="JPG, PNG or WEBP — up to 5MB each"
+              disabled={formState.isSubmitting || uploading}
+              maxFiles={MAX_PHOTOS}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={formState.isSubmitting}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={formState.isSubmitting || uploading}>
                 Cancel
               </Button>
-              <Button type="submit" isLoading={formState.isSubmitting || createTicket.isPending || uploadAttachment.isPending}>
+              <Button type="submit" isLoading={formState.isSubmitting || createTicket.isPending || uploading}>
                 Submit ticket
               </Button>
             </DialogFooter>

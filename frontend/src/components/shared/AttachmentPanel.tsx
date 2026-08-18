@@ -97,12 +97,20 @@ export function AttachmentPanel({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {attachment.fileName}
-                    {attachment.fileExtension}
+                  <p className="flex items-center gap-2 truncate text-sm font-medium text-foreground">
+                    <span className="truncate">
+                      {attachment.fileName}
+                      {attachment.fileExtension}
+                    </span>
+                    {attachment.repairHistoryId && (
+                      <span className="shrink-0 rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-700">
+                        Resolution
+                      </span>
+                    )}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="truncate text-xs text-muted-foreground">
                     {formatFileSize(attachment.fileSize)} · {formatDateTime(attachment.createdAt)}
+                    {attachment.uploadedByName ? ` · Uploaded by ${attachment.uploadedByName}` : ''}
                   </p>
                 </div>
                 <Button
