@@ -72,7 +72,13 @@ public sealed class AttachmentService : IAttachmentService
             throw new ForbiddenException("You can only attach files to your own tickets.");
         }
 
-        return await SaveAsync(request, a => a.TicketId = ticketId, "tickets", userId, ct);
+        // Grouped by the ticket's owning employee (not necessarily the uploader — an admin may
+        // attach a photo on the employee's behalf) so all of one person's ticket photos live
+        // together. EmployeeId can be null if that user was since deleted (anonymized); fall
+        // back to the uploader's id so the folder segment is never empty. Either way this is a
+        // server-resolved Guid, never client input.
+        var subFolder = $"tickets/{ticket.EmployeeId ?? userId}";
+        return await SaveAsync(request, a => a.TicketId = ticketId, subFolder, userId, ct);
     }
 
     public async Task<AttachmentDto> UploadForRepairAsync(Guid repairId, UploadAttachmentRequest request, CancellationToken ct = default)
