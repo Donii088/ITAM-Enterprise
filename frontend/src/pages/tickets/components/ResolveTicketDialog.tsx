@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { FormTextarea } from '@/components/shared/form/FormTextarea';
@@ -9,6 +10,7 @@ import { resolveTicketSchema, type ResolveTicketFormValues } from '@/features/ti
 import { useResolveTicket } from '@/features/tickets/useTickets';
 import { useUploadRepairAttachment } from '@/features/attachments/useAttachments';
 import { ALLOWED_PHOTO_EXTENSIONS, validatePhotoFile } from '@/lib/file-validation';
+import { queryKeys } from '@/lib/query-keys';
 import { toast } from 'sonner';
 
 const MAX_PHOTOS = 5;
@@ -20,6 +22,7 @@ export interface ResolveTicketDialogProps {
 }
 
 export function ResolveTicketDialog({ open, onOpenChange, ticketId }: ResolveTicketDialogProps) {
+  const queryClient = useQueryClient();
   const resolveTicket = useResolveTicket();
   const uploadAttachment = useUploadRepairAttachment();
   const [photos, setPhotos] = React.useState<File[]>([]);
@@ -45,6 +48,11 @@ export function ResolveTicketDialog({ open, onOpenChange, ticketId }: ResolveTic
         photos.map((file) => uploadAttachment.mutateAsync({ entityId: result.repair.id, file })),
       );
       setUploading(false);
+
+      // Resolution photos are surfaced in the ticket's own attachment gallery (merged
+      // server-side via RepairHistory -> Ticket), but the upload mutation only invalidates the
+      // repair-scoped query — refresh the ticket-scoped one too so it shows up without a reload.
+      queryClient.invalidateQueries({ queryKey: queryKeys.attachments.byTicket(ticketId) });
 
       const failedCount = results.filter((r) => r.status === 'rejected').length;
       if (failedCount > 0) {
