@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+
+
 namespace Itam.Application.Services;
 
 public sealed class AttachmentService : IAttachmentService
@@ -32,7 +34,7 @@ public sealed class AttachmentService : IAttachmentService
         _logger = logger;
     }
 
-    public async Task<AttachmentDto> UploadForTicketAsync(Guid ticketId, UploadAttachmentRequest request, CancellationToken ct = default)
+    public async Task<AttachmentDto> UploadForTicketAsync(Guid ticketId, UploadAttachmentRequest request,Guid usersId ,CancellationToken ct = default)
     {
         var userId = RequireUserId();
 
@@ -44,7 +46,7 @@ public sealed class AttachmentService : IAttachmentService
             throw new ForbiddenException("You can only attach files to your own tickets.");
         }
 
-        return await SaveAsync(request, a => a.TicketId = ticketId, "tickets", ct);
+        return await SaveAsync(request, a => a.TicketId = ticketId, $"tickets/{userId}", ct);
     }
 
     public async Task<AttachmentDto> UploadForRepairAsync(Guid repairId, UploadAttachmentRequest request, CancellationToken ct = default)
@@ -212,6 +214,7 @@ public sealed class AttachmentService : IAttachmentService
         return Map(attachment);
     }
 
+
     private void ValidateFile(UploadAttachmentRequest request)
     {
         var extension = Path.GetExtension(request.FileName);
@@ -234,6 +237,7 @@ public sealed class AttachmentService : IAttachmentService
                 $"File exceeds the maximum allowed size of {(_settings.MaxFileSizeBytes / (1024 * 1024))} MB.");
         }
     }
+
 
     private Guid RequireUserId()
         => _currentUserService.UserId ?? throw new UnauthorizedException("You must be authenticated.");
