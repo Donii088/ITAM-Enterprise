@@ -1,9 +1,12 @@
+
 using Itam.Application.DTOs.Attachments;
 using Itam.Application.Interfaces;
 using Itam.Application.Responses;
 using Itam.Domain.Constants;
+using Itam.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Itam.WebApi.Controllers;
 
@@ -22,10 +25,17 @@ public sealed class AttachmentsController : ControllerBase
     [HttpPost("tickets/{id:guid}/attachments")]
     [RequestSizeLimit(6 * 1024 * 1024)]
     public async Task<ActionResult<ApiResponse<AttachmentDto>>> UploadForTicket(
-        Guid id, IFormFile file, CancellationToken cancellationToken)
+        Guid id, IFormFile file, Guid userId, CancellationToken cancellationToken)
     {
-        var dto = await UploadAsync(file,
-            (service, request, ct) => service.UploadForTicketAsync(id, request, ct), cancellationToken);
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(ApiResponse.Fail("File missing!"));
+        }
+
+        using var stream = file.OpenReadStream();
+        var request = new UploadAttachmentRequest(stream, file.FileName, file.ContentType, file.Length);
+        var dto = await _attachmentService.UploadForTicketAsync(id, request, userId, cancellationToken);
+
         return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(dto, "File uploaded successfully."));
     }
 
@@ -35,8 +45,15 @@ public sealed class AttachmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<AttachmentDto>>> UploadForRepair(
         Guid id, IFormFile file, CancellationToken cancellationToken)
     {
-        var dto = await UploadAsync(file,
-            (service, request, ct) => service.UploadForRepairAsync(id, request, ct), cancellationToken);
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(ApiResponse.Fail("File missing!"));
+        }
+
+        using var stream = file.OpenReadStream();
+        var request = new UploadAttachmentRequest(stream, file.FileName, file.ContentType, file.Length);
+        var dto = await _attachmentService.UploadForRepairAsync(id, request, cancellationToken);
+
         return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(dto, "File uploaded successfully."));
     }
 
@@ -46,10 +63,22 @@ public sealed class AttachmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<AttachmentDto>>> UploadForAsset(
         Guid id, IFormFile file, CancellationToken cancellationToken)
     {
-        var dto = await UploadAsync(file,
-            (service, request, ct) => service.UploadForAssetAsync(id, request, ct), cancellationToken);
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(ApiResponse.Fail("File missing!"));
+        }
+
+        using var stream = file.OpenReadStream();
+        var request = new UploadAttachmentRequest(stream, file.FileName, file.ContentType, file.Length);
+
+        var dto = await _attachmentService.UploadForAssetAsync(id, request, cancellationToken);
+
+
         return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(dto, "File uploaded successfully."));
     }
+
+
+
 
     [HttpGet("attachments/ticket/{ticketId:guid}")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<AttachmentDto>>>> GetByTicket(
@@ -81,13 +110,17 @@ public sealed class AttachmentsController : ControllerBase
     {
         var file = await _attachmentService.GetForDownloadAsync(id, cancellationToken);
 
+        if (file == null)
+        {
+            return NotFound(ApiResponse.Fail("Attachment metadata not found."));
+        }
+
         if (!System.IO.File.Exists(file.FullPath))
         {
             return NotFound(ApiResponse.Fail("The physical file was not found on the server."));
         }
 
-        return PhysicalFile(file.FullPath, file.Meta.ContentType,
-            $"{file.Meta.FileName}{file.Meta.FileExtension}");
+        return PhysicalFile(file.FullPath, file.Meta.ContentType, $"{file.Meta.FileName}{file.Meta.FileExtension}");
     }
 
     [HttpDelete("attachments/{id:guid}")]
@@ -95,26 +128,5 @@ public sealed class AttachmentsController : ControllerBase
     {
         await _attachmentService.DeleteAsync(id, cancellationToken);
         return Ok(ApiResponse.Ok("Attachment deleted."));
-    }
-
-    private async Task<AttachmentDto> UploadAsync(
-        IFormFile? file,
-        Func<IAttachmentService, UploadAttachmentRequest, CancellationToken, Task<AttachmentDto>> upload,
-        CancellationToken cancellationToken)
-    {
-        if (file is null || file.Length == 0)
-        {
-            throw new Domain.Exceptions.BusinessRuleViolationException("A non-empty file is required.");
-        }
-
-        await using var stream = file.OpenReadStream();
-
-        var request = new UploadAttachmentRequest(
-            stream,
-            file.FileName,
-            file.ContentType ?? "application/octet-stream",
-            file.Length);
-
-        return await upload(_attachmentService, request, cancellationToken);
     }
 }

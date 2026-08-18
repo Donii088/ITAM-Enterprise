@@ -45,7 +45,10 @@ public sealed class FileStorageService : IFileStorageService
         _logger.LogInformation("File saved to {Path}.", absolutePath);
 
         return Path.Combine(relativeDirectory, fileName).Replace('\\', '/');
+
     }
+
+    
 
     public string GetFullPath(string relativePath)
     {
