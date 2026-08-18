@@ -17,4 +17,5 @@ public class User : BaseEntity
     public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
     public ICollection<RepairHistory> RepairHistories { get; set; } = new List<RepairHistory>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<Attachment> UploadedAttachments { get; set; } = new List<Attachment>();
 }

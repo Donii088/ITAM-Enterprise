@@ -1,10 +1,17 @@
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { FormTextarea } from '@/components/shared/form/FormTextarea';
+import { MultiFileInput } from '@/components/shared/form/MultiFileInput';
 import { resolveTicketSchema, type ResolveTicketFormValues } from '@/features/tickets/schemas';
 import { useResolveTicket } from '@/features/tickets/useTickets';
+import { useUploadRepairAttachment } from '@/features/attachments/useAttachments';
+import { ALLOWED_PHOTO_EXTENSIONS, validatePhotoFile } from '@/lib/file-validation';
+import { toast } from 'sonner';
+
+const MAX_PHOTOS = 5;
 
 export interface ResolveTicketDialogProps {
   open: boolean;
@@ -14,19 +21,42 @@ export interface ResolveTicketDialogProps {
 
 export function ResolveTicketDialog({ open, onOpenChange, ticketId }: ResolveTicketDialogProps) {
   const resolveTicket = useResolveTicket();
+  const uploadAttachment = useUploadRepairAttachment();
+  const [photos, setPhotos] = React.useState<File[]>([]);
+  const [uploading, setUploading] = React.useState(false);
+
   const { control, handleSubmit, reset, formState } = useForm<ResolveTicketFormValues>({
     resolver: zodResolver(resolveTicketSchema),
     defaultValues: { repairDescription: '' },
   });
 
-  function onSubmit(values: ResolveTicketFormValues) {
-    resolveTicket
-      .mutateAsync({ id: ticketId, payload: values })
-      .then(() => {
-        reset();
-        onOpenChange(false);
-      })
-      .catch(() => undefined);
+  async function onSubmit(values: ResolveTicketFormValues) {
+    let result;
+    try {
+      result = await resolveTicket.mutateAsync({ id: ticketId, payload: values });
+    } catch {
+      // Keep the form (including selected photos) intact so the user can retry.
+      return;
+    }
+
+    if (photos.length > 0) {
+      setUploading(true);
+      const results = await Promise.allSettled(
+        photos.map((file) => uploadAttachment.mutateAsync({ entityId: result.repair.id, file })),
+      );
+      setUploading(false);
+
+      const failedCount = results.filter((r) => r.status === 'rejected').length;
+      if (failedCount > 0) {
+        toast.error(
+          `Ticket resolved, but ${failedCount} of ${photos.length} photo${photos.length === 1 ? '' : 's'} failed to upload. You can add them from the ticket page.`,
+        );
+      }
+    }
+
+    reset();
+    setPhotos([]);
+    onOpenChange(false);
   }
 
   return (
@@ -48,11 +78,28 @@ export function ResolveTicketDialog({ open, onOpenChange, ticketId }: ResolveTic
             rows={5}
             required
           />
+          <MultiFileInput
+            label="Resolution photos"
+            hint={`Optional — attach up to ${MAX_PHOTOS} photos of the completed repair`}
+            files={photos}
+            onChange={setPhotos}
+            accept={ALLOWED_PHOTO_EXTENSIONS}
+            validate={validatePhotoFile}
+            browseLabel="Click to upload photos"
+            helpText="JPG, PNG or WEBP — up to 5MB each"
+            disabled={formState.isSubmitting || uploading}
+            maxFiles={MAX_PHOTOS}
+          />
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={formState.isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={formState.isSubmitting || uploading}
+            >
               Cancel
             </Button>
-            <Button type="submit" isLoading={formState.isSubmitting || resolveTicket.isPending}>
+            <Button type="submit" isLoading={formState.isSubmitting || resolveTicket.isPending || uploading}>
               Resolve ticket
             </Button>
           </DialogFooter>

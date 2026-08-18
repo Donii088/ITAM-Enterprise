@@ -7,5 +7,7 @@ export interface Attachment {
   ticketId: string | null;
   repairHistoryId: string | null;
   assetId: string | null;
+  uploadedByUserId: string | null;
+  uploadedByName: string | null;
   createdAt: string;
 }

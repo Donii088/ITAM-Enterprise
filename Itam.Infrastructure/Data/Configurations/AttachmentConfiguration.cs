@@ -45,6 +45,7 @@ public sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachmen
         builder.HasIndex(attachment => attachment.TicketId);
         builder.HasIndex(attachment => attachment.RepairHistoryId);
         builder.HasIndex(attachment => attachment.AssetId);
+        builder.HasIndex(attachment => attachment.UploadedByUserId);
 
         builder.HasOne(attachment => attachment.Ticket)
             .WithMany(ticket => ticket.Attachments)
@@ -60,5 +61,10 @@ public sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachmen
             .WithMany(asset => asset.Attachments)
             .HasForeignKey(attachment => attachment.AssetId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(attachment => attachment.UploadedBy)
+            .WithMany(user => user.UploadedAttachments)
+            .HasForeignKey(attachment => attachment.UploadedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

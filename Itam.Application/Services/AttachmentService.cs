@@ -12,6 +12,32 @@ namespace Itam.Application.Services;
 
 public sealed class AttachmentService : IAttachmentService
 {
+    private const int MaxFileNameLength = 200;
+
+    // Extension -> the content type(s) a browser/client should legitimately report for it.
+    // Rejecting mismatches stops a caller from labeling, say, an HTML payload as a ".jpg" to
+    // trick a viewer that trusts the extension.
+    private static readonly Dictionary<string, string[]> ExpectedContentTypesByExtension = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [".jpg"] = new[] { "image/jpeg" },
+        [".jpeg"] = new[] { "image/jpeg" },
+        [".png"] = new[] { "image/png" },
+        [".webp"] = new[] { "image/webp" },
+        [".pdf"] = new[] { "application/pdf" },
+    };
+
+    // Magic-byte signatures for the extensions above, so a renamed executable/script can't ride
+    // through on extension + declared content type alone. Checked against the first bytes of the
+    // actual upload stream, not anything the client asserts.
+    private static readonly Dictionary<string, byte[][]> SignaturesByExtension = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [".jpg"] = new[] { new byte[] { 0xFF, 0xD8, 0xFF } },
+        [".jpeg"] = new[] { new byte[] { 0xFF, 0xD8, 0xFF } },
+        [".png"] = new[] { new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A } },
+        [".webp"] = new[] { new byte[] { 0x52, 0x49, 0x46, 0x46 } }, // "RIFF"; "WEBP" at offset 8 is checked separately.
+        [".pdf"] = new[] { new byte[] { 0x25, 0x50, 0x44, 0x46 } }, // "%PDF"
+    };
+
     private readonly IApplicationDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
     private readonly IFileStorageService _fileStorage;
@@ -44,7 +70,7 @@ public sealed class AttachmentService : IAttachmentService
             throw new ForbiddenException("You can only attach files to your own tickets.");
         }
 
-        return await SaveAsync(request, a => a.TicketId = ticketId, "tickets", ct);
+        return await SaveAsync(request, a => a.TicketId = ticketId, "tickets", userId, ct);
     }
 
     public async Task<AttachmentDto> UploadForRepairAsync(Guid repairId, UploadAttachmentRequest request, CancellationToken ct = default)
@@ -61,19 +87,19 @@ public sealed class AttachmentService : IAttachmentService
             throw new ForbiddenException("You can only attach files to repairs of your own tickets.");
         }
 
-        return await SaveAsync(request, a => a.RepairHistoryId = repairId, "repairs", ct);
+        return await SaveAsync(request, a => a.RepairHistoryId = repairId, "repairs", userId, ct);
     }
 
     public async Task<AttachmentDto> UploadForAssetAsync(Guid assetId, UploadAttachmentRequest request, CancellationToken ct = default)
     {
-        RequireUserId();
+        var userId = RequireUserId();
 
         if (!await _dbContext.Assets.AnyAsync(a => a.Id == assetId, ct))
         {
             throw new EntityNotFoundException(nameof(Asset), assetId);
         }
 
-        return await SaveAsync(request, a => a.AssetId = assetId, "assets", ct);
+        return await SaveAsync(request, a => a.AssetId = assetId, "assets", userId, ct);
     }
 
     public async Task<IReadOnlyList<AttachmentDto>> GetByTicketAsync(Guid ticketId, CancellationToken ct = default)
@@ -88,8 +114,12 @@ public sealed class AttachmentService : IAttachmentService
             throw new ForbiddenException("You can only view attachments of your own tickets.");
         }
 
+        // Includes photos uploaded at ticket-resolution time (linked via RepairHistory rather
+        // than the ticket directly) so resolution photos show up in the same gallery.
         var items = await _dbContext.Attachments.AsNoTracking()
-            .Where(a => a.TicketId == ticketId)
+            .Include(a => a.UploadedBy)
+            .Where(a => a.TicketId == ticketId
+                || (a.RepairHistoryId != null && a.RepairHistory!.TicketId == ticketId))
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync(ct);
 
@@ -112,6 +142,7 @@ public sealed class AttachmentService : IAttachmentService
         }
 
         var items = await _dbContext.Attachments.AsNoTracking()
+            .Include(a => a.UploadedBy)
             .Where(a => a.RepairHistoryId == repairId)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync(ct);
@@ -127,6 +158,7 @@ public sealed class AttachmentService : IAttachmentService
         }
 
         var items = await _dbContext.Attachments.AsNoTracking()
+            .Include(a => a.UploadedBy)
             .Where(a => a.AssetId == assetId)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync(ct);
@@ -138,20 +170,9 @@ public sealed class AttachmentService : IAttachmentService
     {
         var userId = RequireUserId();
 
-        var attachment = await _dbContext.Attachments
-            .Include(a => a.Ticket)
-            .SingleOrDefaultAsync(a => a.Id == id, ct)
-            ?? throw new EntityNotFoundException(nameof(Attachment), id);
+        var attachment = await LoadWithOwnersAsync(id, ct);
 
-        if (attachment.TicketId.HasValue && !IsAdmin() && attachment.Ticket!.EmployeeId != userId)
-        {
-            throw new ForbiddenException("You can only download attachments of your own tickets.");
-        }
-
-        if (!attachment.TicketId.HasValue && !IsAdmin())
-        {
-            throw new ForbiddenException("Only IT admins can download this attachment.");
-        }
+        EnsureCanAccess(attachment, userId, "download");
 
         return new AttachmentFileDto(Map(attachment), _fileStorage.GetFullPath(attachment.FilePath));
     }
@@ -160,20 +181,9 @@ public sealed class AttachmentService : IAttachmentService
     {
         var userId = RequireUserId();
 
-        var attachment = await _dbContext.Attachments
-            .Include(a => a.Ticket)
-            .SingleOrDefaultAsync(a => a.Id == id, ct)
-            ?? throw new EntityNotFoundException(nameof(Attachment), id);
+        var attachment = await LoadWithOwnersAsync(id, ct);
 
-        if (attachment.TicketId.HasValue && !IsAdmin() && attachment.Ticket!.EmployeeId != userId)
-        {
-            throw new ForbiddenException("You can only delete attachments of your own tickets.");
-        }
-
-        if (!attachment.TicketId.HasValue && !IsAdmin())
-        {
-            throw new ForbiddenException("Only IT admins can delete this attachment.");
-        }
+        EnsureCanAccess(attachment, userId, "delete");
 
         await _fileStorage.DeleteAsync(attachment.FilePath, ct);
 
@@ -183,45 +193,95 @@ public sealed class AttachmentService : IAttachmentService
         _logger.LogInformation("Attachment {Id} deleted by {UserId}.", id, userId);
     }
 
-    private async Task<AttachmentDto> SaveAsync(
-        UploadAttachmentRequest request, Action<Attachment> setOwner, string subFolder, CancellationToken ct)
+    private async Task<Attachment> LoadWithOwnersAsync(Guid id, CancellationToken ct)
     {
-        ValidateFile(request);
+        return await _dbContext.Attachments
+            .Include(a => a.Ticket)
+            .Include(a => a.RepairHistory).ThenInclude(r => r!.Ticket)
+            .Include(a => a.UploadedBy)
+            .SingleOrDefaultAsync(a => a.Id == id, ct)
+            ?? throw new EntityNotFoundException(nameof(Attachment), id);
+    }
 
-        var extension = Path.GetExtension(request.FileName)!.ToLowerInvariant();
+    /// <summary>
+    /// Resolves the ticket that "owns" an attachment for access-control purposes — either
+    /// directly (TicketId) or through the repair it was uploaded against as a resolution photo
+    /// (RepairHistoryId -&gt; RepairHistory.Ticket). Asset attachments have neither and are
+    /// admin-only, matching the rest of the asset management surface.
+    /// </summary>
+    private void EnsureCanAccess(Attachment attachment, Guid userId, string action)
+    {
+        if (IsAdmin())
+        {
+            return;
+        }
+
+        var owningTicket = attachment.Ticket ?? attachment.RepairHistory?.Ticket;
+
+        if (owningTicket is not null)
+        {
+            if (owningTicket.EmployeeId != userId)
+            {
+                throw new ForbiddenException($"You can only {action} attachments of your own tickets.");
+            }
+            return;
+        }
+
+        throw new ForbiddenException($"Only IT admins can {action} this attachment.");
+    }
+
+    private async Task<AttachmentDto> SaveAsync(
+        UploadAttachmentRequest request, Action<Attachment> setOwner, string subFolder, Guid uploadedByUserId, CancellationToken ct)
+    {
+        var extension = ValidateFile(request);
+
+        await ValidateSignatureAsync(request, extension, ct);
+
         var uniqueName = $"{Guid.NewGuid()}{extension}";
-
         var relativePath = await _fileStorage.SaveAsync(request.Content, subFolder, uniqueName, ct);
 
         var attachment = new Attachment
         {
-            FileName = Path.GetFileNameWithoutExtension(request.FileName),
+            FileName = TrimFileName(Path.GetFileNameWithoutExtension(request.FileName)),
             FileExtension = extension,
             FileSize = request.Size,
             FilePath = relativePath,
-            ContentType = request.ContentType
+            ContentType = request.ContentType,
+            UploadedByUserId = uploadedByUserId
         };
 
         setOwner(attachment);
 
-        _dbContext.Attachments.Add(attachment);
-        await _dbContext.SaveChangesAsync(ct);
+        try
+        {
+            _dbContext.Attachments.Add(attachment);
+            await _dbContext.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            // Don't leave an orphaned physical file behind if the DB write failed after the
+            // file was already written to disk.
+            await _fileStorage.DeleteAsync(relativePath, CancellationToken.None);
+            throw;
+        }
 
-        _logger.LogInformation("Attachment {Id} stored at {Path}.", attachment.Id, relativePath);
+        _logger.LogInformation("Attachment {Id} stored at {Path} by {UserId}.", attachment.Id, relativePath, uploadedByUserId);
 
-        return Map(attachment);
+        return Map(attachment, uploaderName: null);
     }
 
-    private void ValidateFile(UploadAttachmentRequest request)
+    private string ValidateFile(UploadAttachmentRequest request)
     {
         var extension = Path.GetExtension(request.FileName);
 
         if (string.IsNullOrEmpty(extension) ||
-            !_settings.AllowedExtensions.Contains(extension.ToLowerInvariant()))
+            !_settings.AllowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
         {
             throw new BusinessRuleViolationException(
                 $"File type '{extension}' is not allowed. Allowed types: {string.Join(", ", _settings.AllowedExtensions)}.");
         }
+
+        extension = extension.ToLowerInvariant();
 
         if (request.Size <= 0)
         {
@@ -233,14 +293,68 @@ public sealed class AttachmentService : IAttachmentService
             throw new BusinessRuleViolationException(
                 $"File exceeds the maximum allowed size of {(_settings.MaxFileSizeBytes / (1024 * 1024))} MB.");
         }
+
+        var nameWithoutExtension = Path.GetFileNameWithoutExtension(request.FileName);
+        if (nameWithoutExtension.Length > MaxFileNameLength)
+        {
+            throw new BusinessRuleViolationException(
+                $"File name is too long. Maximum {MaxFileNameLength} characters.");
+        }
+
+        if (ExpectedContentTypesByExtension.TryGetValue(extension, out var expectedContentTypes) &&
+            !expectedContentTypes.Contains(request.ContentType, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new BusinessRuleViolationException(
+                $"The file's content type ('{request.ContentType}') does not match its extension.");
+        }
+
+        return extension;
     }
+
+    /// <summary>
+    /// Confirms the first bytes of the actual upload match the extension's expected file
+    /// signature, so a disguised executable/script can't pass just by having the right extension
+    /// and a spoofed Content-Type. Silently skips the check if the stream can't be rewound — the
+    /// upload still goes through the extension/content-type checks above either way.
+    /// </summary>
+    private static async Task ValidateSignatureAsync(UploadAttachmentRequest request, string extension, CancellationToken ct)
+    {
+        if (!SignaturesByExtension.TryGetValue(extension, out var signatures) || !request.Content.CanSeek)
+        {
+            return;
+        }
+
+        var startPosition = request.Content.Position;
+        var header = new byte[16];
+        var read = await request.Content.ReadAsync(header.AsMemory(0, header.Length), ct);
+        request.Content.Position = startPosition;
+
+        var matches = signatures.Any(signature => read >= signature.Length && header.AsSpan(0, signature.Length).SequenceEqual(signature));
+
+        if (matches && extension == ".webp")
+        {
+            matches = read >= 12 && header.AsSpan(8, 4).SequenceEqual("WEBP"u8);
+        }
+
+        if (!matches)
+        {
+            throw new BusinessRuleViolationException(
+                "The file's contents don't match its extension. Make sure you're uploading a genuine file of that type.");
+        }
+    }
+
+    private static string TrimFileName(string name) =>
+        name.Length > MaxFileNameLength ? name[..MaxFileNameLength] : name;
 
     private Guid RequireUserId()
         => _currentUserService.UserId ?? throw new UnauthorizedException("You must be authenticated.");
 
     private bool IsAdmin() => _currentUserService.Role == RoleConstants.ItAdmin;
 
-    private static AttachmentDto Map(Attachment attachment) => new(
+    private static AttachmentDto Map(Attachment attachment) =>
+        Map(attachment, attachment.UploadedBy is null ? null : $"{attachment.UploadedBy.FirstName} {attachment.UploadedBy.LastName}");
+
+    private static AttachmentDto Map(Attachment attachment, string? uploaderName) => new(
         attachment.Id,
         attachment.FileName,
         attachment.FileExtension,
@@ -249,5 +363,7 @@ public sealed class AttachmentService : IAttachmentService
         attachment.TicketId,
         attachment.RepairHistoryId,
         attachment.AssetId,
+        attachment.UploadedByUserId,
+        uploaderName,
         attachment.CreatedAt);
 }

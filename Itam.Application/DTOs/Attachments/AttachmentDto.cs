@@ -9,4 +9,6 @@ public sealed record AttachmentDto(
     Guid? TicketId,
     Guid? RepairHistoryId,
     Guid? AssetId,
+    Guid? UploadedByUserId,
+    string? UploadedByName,
     DateTime CreatedAt);

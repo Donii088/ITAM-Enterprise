@@ -17,4 +17,9 @@ public class Attachment : BaseEntity
 
     public Guid? AssetId { get; set; }
     public Asset? Asset { get; set; }
+
+    // Nullable so a hard-deleted user's past uploads are preserved (anonymized) instead of
+    // blocking deletion or being cascade-deleted.
+    public Guid? UploadedByUserId { get; set; }
+    public User? UploadedBy { get; set; }
 }

@@ -31,6 +31,11 @@ public sealed class FileStorageService : IFileStorageService
 
         var absolutePath = Path.Combine(absoluteDirectory, fileName);
 
+        // Callers only ever pass hardcoded subfolder names and server-generated (GUID) file
+        // names, but this stays cheap insurance against a future caller accidentally forwarding
+        // user input into either parameter.
+        EnsureWithinRoot(absolutePath);
+
         // Last argument is 'useAsync: true' — this FileStream overload has no CancellationToken.
         await using var target = new FileStream(
             absolutePath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true);
@@ -45,7 +50,9 @@ public sealed class FileStorageService : IFileStorageService
     public string GetFullPath(string relativePath)
     {
         var safeRelative = relativePath.Replace('/', Path.DirectorySeparatorChar);
-        return Path.Combine(_environment.ContentRootPath, safeRelative);
+        var fullPath = Path.Combine(_environment.ContentRootPath, safeRelative);
+        EnsureWithinRoot(fullPath);
+        return fullPath;
     }
 
     public Task DeleteAsync(string relativePath, CancellationToken ct = default)
@@ -59,5 +66,16 @@ public sealed class FileStorageService : IFileStorageService
         }
 
         return Task.CompletedTask;
+    }
+
+    private void EnsureWithinRoot(string fullPath)
+    {
+        var rootDirectory = Path.GetFullPath(Path.Combine(_environment.ContentRootPath, _settings.RootFolder));
+        var resolvedPath = Path.GetFullPath(fullPath);
+
+        if (!resolvedPath.StartsWith(rootDirectory + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Resolved file path escapes the configured upload root.");
+        }
     }
 }
