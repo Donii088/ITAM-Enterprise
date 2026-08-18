@@ -60,7 +60,7 @@ public sealed class AttachmentService : IAttachmentService
         _logger = logger;
     }
 
-    public async Task<AttachmentDto> UploadForTicketAsync(Guid ticketId, UploadAttachmentRequest request,Guid usersId ,CancellationToken ct = default)
+    public async Task<AttachmentDto> UploadForTicketAsync(Guid ticketId, UploadAttachmentRequest request, CancellationToken ct = default)
     {
         var userId = RequireUserId();
 
@@ -72,7 +72,7 @@ public sealed class AttachmentService : IAttachmentService
             throw new ForbiddenException("You can only attach files to your own tickets.");
         }
 
-        return await SaveAsync(request, a => a.TicketId = ticketId, $"tickets/{userId}", ct);
+        return await SaveAsync(request, a => a.TicketId = ticketId, "tickets", userId, ct);
     }
 
     public async Task<AttachmentDto> UploadForRepairAsync(Guid repairId, UploadAttachmentRequest request, CancellationToken ct = default)

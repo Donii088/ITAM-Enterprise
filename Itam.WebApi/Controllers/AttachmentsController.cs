@@ -25,7 +25,7 @@ public sealed class AttachmentsController : ControllerBase
     [HttpPost("tickets/{id:guid}/attachments")]
     [RequestSizeLimit(6 * 1024 * 1024)]
     public async Task<ActionResult<ApiResponse<AttachmentDto>>> UploadForTicket(
-        Guid id, IFormFile file, Guid userId, CancellationToken cancellationToken)
+        Guid id, IFormFile file, CancellationToken cancellationToken)
     {
         if (file == null || file.Length == 0)
         {
@@ -34,7 +34,7 @@ public sealed class AttachmentsController : ControllerBase
 
         using var stream = file.OpenReadStream();
         var request = new UploadAttachmentRequest(stream, file.FileName, file.ContentType, file.Length);
-        var dto = await _attachmentService.UploadForTicketAsync(id, request, userId, cancellationToken);
+        var dto = await _attachmentService.UploadForTicketAsync(id, request, cancellationToken);
 
         return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(dto, "File uploaded successfully."));
     }

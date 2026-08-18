@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# User-uploaded attachments (runtime data, not source)
+Itam.WebApi/uploads/
