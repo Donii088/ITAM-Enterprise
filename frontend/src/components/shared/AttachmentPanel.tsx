@@ -4,10 +4,33 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { AttachmentImagePreviewDialog } from './AttachmentImagePreviewDialog';
 import { formatDateTime, formatFileSize } from '@/lib/formatters';
 import { ALLOWED_ATTACHMENT_EXTENSIONS, validateAttachmentFile } from '@/lib/file-validation';
 import { toast } from 'sonner';
 import type { Attachment } from '@/types';
+
+function AttachmentMeta({ attachment }: { attachment: Attachment }) {
+  return (
+    <div className="min-w-0 flex-1">
+      <p className="flex items-center gap-2 truncate text-sm font-medium text-foreground">
+        <span className="truncate">
+          {attachment.fileName}
+          {attachment.fileExtension}
+        </span>
+        {attachment.repairHistoryId && (
+          <span className="shrink-0 rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-700">
+            Resolution
+          </span>
+        )}
+      </p>
+      <p className="truncate text-xs text-muted-foreground">
+        {formatFileSize(attachment.fileSize)} · {formatDateTime(attachment.createdAt)}
+        {attachment.uploadedByName ? ` · Uploaded by ${attachment.uploadedByName}` : ''}
+      </p>
+    </div>
+  );
+}
 
 export interface AttachmentPanelProps {
   attachments: Attachment[] | undefined;
@@ -34,6 +57,7 @@ export function AttachmentPanel({
 }: AttachmentPanelProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [pendingDelete, setPendingDelete] = React.useState<Attachment | null>(null);
+  const [previewTarget, setPreviewTarget] = React.useState<Attachment | null>(null);
 
   function handleFileSelect(file: File | null) {
     if (!file || !onUpload) return;
@@ -89,30 +113,26 @@ export function AttachmentPanel({
                 key={attachment.id}
                 className="flex items-center gap-3 rounded-lg border border-border p-3"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-muted">
-                  {isImage ? (
-                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 truncate text-sm font-medium text-foreground">
-                    <span className="truncate">
-                      {attachment.fileName}
-                      {attachment.fileExtension}
-                    </span>
-                    {attachment.repairHistoryId && (
-                      <span className="shrink-0 rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-700">
-                        Resolution
-                      </span>
-                    )}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {formatFileSize(attachment.fileSize)} · {formatDateTime(attachment.createdAt)}
-                    {attachment.uploadedByName ? ` · Uploaded by ${attachment.uploadedByName}` : ''}
-                  </p>
-                </div>
+                {isImage ? (
+                  <button
+                    type="button"
+                    onClick={() => setPreviewTarget(attachment)}
+                    className="focus-ring flex min-w-0 flex-1 items-center gap-3 rounded-md text-left"
+                    aria-label={`Preview ${attachment.fileName}${attachment.fileExtension}`}
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-muted">
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <AttachmentMeta attachment={attachment} />
+                  </button>
+                ) : (
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-muted">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <AttachmentMeta attachment={attachment} />
+                  </div>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -150,6 +170,13 @@ export function AttachmentPanel({
           if (pendingDelete && onDelete) onDelete(pendingDelete);
           setPendingDelete(null);
         }}
+      />
+
+      <AttachmentImagePreviewDialog
+        attachment={previewTarget}
+        open={Boolean(previewTarget)}
+        onOpenChange={(open) => !open && setPreviewTarget(null)}
+        onDownload={onDownload}
       />
     </div>
   );

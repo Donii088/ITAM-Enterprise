@@ -13,17 +13,20 @@ namespace Itam.Application.Services;
 public sealed class TicketService : ITicketService
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IFileStorageService _fileStorage;
     private readonly ICurrentUserService _currentUserService;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<TicketService> _logger;
 
     public TicketService(
         IApplicationDbContext dbContext,
+        IFileStorageService fileStorage,
         ICurrentUserService currentUserService,
         TimeProvider timeProvider,
         ILogger<TicketService> logger)
     {
         _dbContext = dbContext;
+        _fileStorage = fileStorage;
         _currentUserService = currentUserService;
         _timeProvider = timeProvider;
         _logger = logger;
@@ -127,6 +130,43 @@ public sealed class TicketService : ITicketService
         _logger.LogInformation("Ticket {TicketId} status changed to {Status} by admin.", ticket.Id, request.Status);
 
         return Map(ticket);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var ticket = await _dbContext.Tickets.SingleOrDefaultAsync(t => t.Id == id, ct)
+            ?? throw new EntityNotFoundException(nameof(Ticket), id);
+
+        // Attachment.TicketId and RepairHistory.TicketId are both DeleteBehavior.Restrict, so a
+        // plain Tickets.Remove would fail on FK violation for any ticket with photos or a repair
+        // record. Cascade the delete manually, same pattern as AssetService.HardDeleteAsync:
+        // physical files first (no FK protection), then attachment rows (including resolution
+        // photos linked via RepairHistoryId), then repair history, then the ticket itself.
+        var repairIds = await _dbContext.RepairHistories
+            .Where(r => r.TicketId == id)
+            .Select(r => (Guid?)r.Id)
+            .ToListAsync(ct);
+
+        var attachments = await _dbContext.Attachments
+            .Where(a => a.TicketId == id || repairIds.Contains(a.RepairHistoryId))
+            .ToListAsync(ct);
+
+        foreach (var attachment in attachments)
+        {
+            await _fileStorage.DeleteAsync(attachment.FilePath, ct);
+        }
+
+        var repairs = await _dbContext.RepairHistories.Where(r => r.TicketId == id).ToListAsync(ct);
+
+        _dbContext.Attachments.RemoveRange(attachments);
+        _dbContext.RepairHistories.RemoveRange(repairs);
+        _dbContext.Tickets.Remove(ticket);
+
+        await _dbContext.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Ticket {TicketId} deleted by {UserId} with cascade: {Repairs} repair(s), {Attachments} attachment(s) removed.",
+            id, _currentUserService.UserId, repairs.Count, attachments.Count);
     }
 
     private async Task<PagedResult<TicketDto>> GetPagedInternalAsync(GetTicketsQuery query, Guid? ownerOnly, CancellationToken ct)
