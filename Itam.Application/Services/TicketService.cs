@@ -91,8 +91,18 @@ public sealed class TicketService : ITicketService
 
     public async Task<TicketDto> CancelAsync(Guid id, CancellationToken ct = default)
     {
+        var userId = _currentUserService.UserId
+            ?? throw new UnauthorizedException("You must be authenticated.");
+
         var ticket = await LoadTrackedAsync(id, ct);
-        EnsureOwnerOrAdmin(ticket);
+
+        // Deliberately narrower than EnsureOwnerOrAdmin: cancelling is an action reserved for the
+        // ticket's own reporter, with no admin override. Admins manage a ticket's lifecycle via
+        // Resolve/UpdateStatus/Delete instead.
+        if (ticket.EmployeeId != userId)
+        {
+            throw new ForbiddenException("Only the ticket's owner can cancel it.");
+        }
 
         if (ticket.Status is TicketStatus.Done or TicketStatus.Cancelled)
         {
@@ -103,7 +113,7 @@ public sealed class TicketService : ITicketService
         ticket.Status = TicketStatus.Cancelled;
         await _dbContext.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Ticket {TicketId} cancelled by {UserId}.", ticket.Id, _currentUserService.UserId);
+        _logger.LogInformation("Ticket {TicketId} cancelled by owner {UserId}.", ticket.Id, userId);
 
         return Map(ticket);
     }

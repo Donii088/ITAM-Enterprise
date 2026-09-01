@@ -68,7 +68,9 @@ export default function TicketDetailPage() {
 
   const isOwner = ticket.employeeId === user?.id;
   const isTerminal = ticket.status === TICKET_STATUS.Done || ticket.status === TICKET_STATUS.Cancelled;
-  const cancellable = (ticket.status === TICKET_STATUS.Open || ticket.status === TICKET_STATUS.OnReview) && (isOwner || admin);
+  // Owner-only, no admin override — admins manage a ticket's lifecycle via Update status /
+  // Resolve / Delete instead. Matches TicketService.CancelAsync on the backend.
+  const cancellable = (ticket.status === TICKET_STATUS.Open || ticket.status === TICKET_STATUS.OnReview) && isOwner;
   const resolvable = admin && !isTerminal;
   // Status can only move between the non-terminal states from here — Done is reached solely via
   // Resolve, and once a ticket is Done or Cancelled the backend refuses any further status change.
