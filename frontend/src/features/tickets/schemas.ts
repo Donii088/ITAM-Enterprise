@@ -11,9 +11,12 @@ export const createTicketSchema = z.object({
 });
 export type CreateTicketFormValues = z.infer<typeof createTicketSchema>;
 
+// Done is intentionally excluded — a ticket can only reach Done through the resolve flow
+// (POST /tickets/{id}/resolve), which also records the repair history. The backend rejects a
+// manual status change to Done for the same reason (see TicketService.UpdateStatusAsync).
 export const updateTicketStatusSchema = z.object({
   status: z.enum(
-    [TICKET_STATUS.Open, TICKET_STATUS.OnReview, TICKET_STATUS.InProgress, TICKET_STATUS.Done, TICKET_STATUS.Cancelled],
+    [TICKET_STATUS.Open, TICKET_STATUS.OnReview, TICKET_STATUS.InProgress, TICKET_STATUS.Cancelled],
     { errorMap: () => ({ message: 'Select a status' }) },
   ),
 });

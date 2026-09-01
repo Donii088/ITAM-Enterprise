@@ -25,6 +25,7 @@ export const queryKeys = {
     byTicket: (ticketId: string) => ['attachments', 'ticket', ticketId] as const,
     byRepair: (repairId: string) => ['attachments', 'repair', repairId] as const,
     byAsset: (assetId: string) => ['attachments', 'asset', assetId] as const,
+    preview: (attachmentId: string) => ['attachments', 'preview', attachmentId] as const,
   },
   dashboard: {
     overview: ['dashboard', 'overview'] as const,

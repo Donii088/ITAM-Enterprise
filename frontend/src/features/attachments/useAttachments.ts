@@ -67,6 +67,22 @@ export function useDownloadAttachment() {
   });
 }
 
+// Fetches the file bytes for in-app preview (e.g. an image lightbox) without triggering a
+// browser download the way useDownloadAttachment does. The endpoint requires the same bearer
+// auth as every other API call, so a plain <img src="..."> can't point at it directly — the
+// blob has to be fetched through apiClient (which attaches the token) and turned into an object
+// URL by the caller. `enabled` should track the dialog's open state so the fetch only happens
+// once the user actually opens the preview.
+export function useAttachmentPreview(attachment: Attachment | null, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.attachments.preview(attachment?.id ?? 'none'),
+    queryFn: () => attachmentService.download(attachment as Attachment),
+    enabled: enabled && Boolean(attachment),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+}
+
 export function useDeleteAttachment(invalidateKey: QueryKey) {
   const queryClient = useQueryClient();
   return useMutation({

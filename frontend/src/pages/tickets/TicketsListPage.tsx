@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { RefreshCcw, Ticket as TicketIcon } from 'lucide-react';
+import { MoreHorizontal, RefreshCcw, Ticket as TicketIcon, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -11,9 +11,17 @@ import { TableContainer, TableHead, TableBody, TableRow, TableTh, TableTd } from
 import { TableSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Pagination } from '@/components/ui/Pagination';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/DropdownMenu';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/ui/StatusBadge';
-import { useTicketsList } from '@/features/tickets/useTickets';
+import { useDeleteTicket, useTicketsList } from '@/features/tickets/useTickets';
 import { TicketStatusDialog } from './components/TicketStatusDialog';
 import { formatDate } from '@/lib/formatters';
 import { routes } from '@/routes/routes';
@@ -24,6 +32,8 @@ const DEFAULT_PAGE_SIZE = Number(import.meta.env.VITE_DEFAULT_PAGE_SIZE) || 10;
 export default function TicketsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [statusTarget, setStatusTarget] = useState<Ticket | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Ticket | null>(null);
+  const deleteTicket = useDeleteTicket();
 
   useEffect(() => {
     document.title = 'All Tickets — ITAM Enterprise';
@@ -130,10 +140,26 @@ export default function TicketsListPage() {
                     <TableTd><TicketPriorityBadge priority={ticket.priority} /></TableTd>
                     <TableTd><TicketStatusBadge status={ticket.status} /></TableTd>
                     <TableTd className="text-muted-foreground">{formatDate(ticket.createdAt)}</TableTd>
-                    <TableTd className="text-right">
-                      <Button variant="ghost" size="sm" leftIcon={<RefreshCcw className="h-3.5 w-3.5" />} onClick={() => setStatusTarget(ticket)}>
-                        Status
-                      </Button>
+                    <TableTd className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Actions for ${ticket.title}`}>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem
+                            onClick={() => setStatusTarget(ticket)}
+                            disabled={ticket.status === TICKET_STATUS.Done || ticket.status === TICKET_STATUS.Cancelled}
+                          >
+                            <RefreshCcw className="h-4 w-4" /> Update status
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem destructive onClick={() => setDeleteTarget(ticket)}>
+                            <Trash2 className="h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableTd>
                   </TableRow>
                 ))}
@@ -163,6 +189,18 @@ export default function TicketsListPage() {
           currentStatus={statusTarget.status}
         />
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete ticket"
+        description={`This will permanently delete the ticket "${deleteTarget?.title}", along with its repair history and photo attachments. This action cannot be undone.`}
+        confirmLabel="Delete"
+        isLoading={deleteTicket.isPending}
+        onConfirm={() => {
+          if (deleteTarget) deleteTicket.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+        }}
+      />
     </div>
   );
 }

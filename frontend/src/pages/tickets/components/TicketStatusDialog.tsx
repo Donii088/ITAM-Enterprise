@@ -7,7 +7,11 @@ import { updateTicketStatusSchema, type UpdateTicketStatusFormValues } from '@/f
 import { useUpdateTicketStatus } from '@/features/tickets/useTickets';
 import { TICKET_STATUS, TICKET_STATUS_LABELS, type TicketStatus } from '@/types';
 
-const STATUS_OPTIONS = Object.values(TICKET_STATUS).map((v) => ({ value: v, label: TICKET_STATUS_LABELS[v] }));
+// Done is not offered here — it's only reachable through the resolve flow. See the matching
+// comment in features/tickets/schemas.ts.
+const STATUS_OPTIONS = Object.values(TICKET_STATUS)
+  .filter((v) => v !== TICKET_STATUS.Done)
+  .map((v) => ({ value: v, label: TICKET_STATUS_LABELS[v] }));
 
 export interface TicketStatusDialogProps {
   open: boolean;
@@ -20,7 +24,9 @@ export function TicketStatusDialog({ open, onOpenChange, ticketId, currentStatus
   const updateStatus = useUpdateTicketStatus();
   const { control, handleSubmit, formState } = useForm<UpdateTicketStatusFormValues>({
     resolver: zodResolver(updateTicketStatusSchema),
-    defaultValues: { status: currentStatus },
+    // Callers only open this dialog for tickets that aren't already Done, so currentStatus is
+    // always one of the selectable options above.
+    defaultValues: { status: currentStatus as UpdateTicketStatusFormValues['status'] },
   });
 
   function onSubmit(values: UpdateTicketStatusFormValues) {
