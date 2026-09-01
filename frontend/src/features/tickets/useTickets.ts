@@ -75,6 +75,18 @@ export function useUpdateTicketStatus() {
   });
 }
 
+export function useDeleteTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => ticketService.delete(id),
+    onSuccess: (_, id) => {
+      invalidateTicketRelated(queryClient, id);
+      toast.success('Ticket deleted.');
+    },
+    onError: (error) => toast.error(getErrorMessage(error, 'Could not delete the ticket.')),
+  });
+}
+
 export function useResolveTicket() {
   const queryClient = useQueryClient();
   return useMutation({

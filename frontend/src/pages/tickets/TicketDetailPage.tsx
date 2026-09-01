@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { CheckCircle2, Paperclip, RefreshCcw, Wrench, XCircle } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { CheckCircle2, Paperclip, RefreshCcw, Trash2, Wrench, XCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/ui/StatusBadge';
 import { AttachmentPanel } from '@/components/shared/AttachmentPanel';
-import { useTicket, useCancelTicket } from '@/features/tickets/useTickets';
+import { useTicket, useCancelTicket, useDeleteTicket } from '@/features/tickets/useTickets';
 import { useTicketAttachments, useDeleteAttachment, useDownloadAttachment, useUploadTicketAttachment } from '@/features/attachments/useAttachments';
 import { useTicketRepairs } from '@/features/repairs/useRepairs';
 import { useAuth } from '@/features/auth/useAuth';
@@ -34,12 +34,14 @@ function DetailField({ label, value }: { label: string; value: React.ReactNode }
 
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const admin = isItAdmin(user?.role);
 
   const [statusOpen, setStatusOpen] = useState(false);
   const [resolveOpen, setResolveOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data: ticket, isLoading, isError, error, refetch } = useTicket(id);
   const { data: attachments, isLoading: attachmentsLoading } = useTicketAttachments(id);
@@ -49,6 +51,7 @@ export default function TicketDetailPage() {
   const downloadAttachment = useDownloadAttachment();
   const deleteAttachment = useDeleteAttachment(queryKeys.attachments.byTicket(id ?? ''));
   const cancelTicket = useCancelTicket();
+  const deleteTicket = useDeleteTicket();
 
   useEffect(() => {
     document.title = ticket ? `${ticket.title} — ITAM Enterprise` : 'Ticket — ITAM Enterprise';
@@ -64,8 +67,14 @@ export default function TicketDetailPage() {
   }
 
   const isOwner = ticket.employeeId === user?.id;
-  const cancellable = (ticket.status === TICKET_STATUS.Open || ticket.status === TICKET_STATUS.OnReview) && (isOwner || admin);
-  const resolvable = admin && ticket.status !== TICKET_STATUS.Done && ticket.status !== TICKET_STATUS.Cancelled;
+  const isTerminal = ticket.status === TICKET_STATUS.Done || ticket.status === TICKET_STATUS.Cancelled;
+  // Owner-only, no admin override — admins manage a ticket's lifecycle via Update status /
+  // Resolve / Delete instead. Matches TicketService.CancelAsync on the backend.
+  const cancellable = (ticket.status === TICKET_STATUS.Open || ticket.status === TICKET_STATUS.OnReview) && isOwner;
+  const resolvable = admin && !isTerminal;
+  // Status can only move between the non-terminal states from here — Done is reached solely via
+  // Resolve, and once a ticket is Done or Cancelled the backend refuses any further status change.
+  const statusEditable = admin && !isTerminal;
 
   return (
     <div className="space-y-6">
@@ -81,7 +90,7 @@ export default function TicketDetailPage() {
         }
         actions={
           <>
-            {admin && (
+            {statusEditable && (
               <Button variant="outline" size="sm" leftIcon={<RefreshCcw className="h-4 w-4" />} onClick={() => setStatusOpen(true)}>
                 Update status
               </Button>
@@ -94,6 +103,11 @@ export default function TicketDetailPage() {
             {cancellable && (
               <Button variant="danger" size="sm" leftIcon={<XCircle className="h-4 w-4" />} onClick={() => setCancelOpen(true)}>
                 Cancel
+              </Button>
+            )}
+            {admin && (
+              <Button variant="danger" size="sm" leftIcon={<Trash2 className="h-4 w-4" />} onClick={() => setDeleteOpen(true)}>
+                Delete
               </Button>
             )}
           </>
@@ -182,6 +196,20 @@ export default function TicketDetailPage() {
         confirmLabel="Cancel ticket"
         isLoading={cancelTicket.isPending}
         onConfirm={() => cancelTicket.mutate(ticket.id, { onSuccess: () => setCancelOpen(false) })}
+      />
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete ticket"
+        description={`This will permanently delete the ticket "${ticket.title}", along with its repair history and photo attachments. This action cannot be undone.`}
+        confirmLabel="Delete"
+        isLoading={deleteTicket.isPending}
+        onConfirm={() =>
+          deleteTicket.mutate(ticket.id, {
+            onSuccess: () => navigate(admin ? routes.tickets.list : routes.tickets.mine),
+          })
+        }
       />
     </div>
   );

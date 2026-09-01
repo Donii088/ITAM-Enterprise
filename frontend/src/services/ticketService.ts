@@ -17,4 +17,6 @@ export const ticketService = {
 
   updateStatus: (id: string, payload: UpdateTicketStatusRequest) =>
     unwrapResponse<Ticket>(apiClient.post(`/tickets/${id}/status`, payload)),
+
+  delete: (id: string) => unwrapResponse<void>(apiClient.delete(`/tickets/${id}`)),
 };
