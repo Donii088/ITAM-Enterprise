@@ -94,4 +94,13 @@ public sealed class TicketsController : ControllerBase
         
         return Ok(ApiResponse.Ok(ticket, "Ticket status updated successfully."));
     }
+
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
+    public async Task<ActionResult<ApiResponse>> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        await _ticketService.DeleteAsync(id, cancellationToken);
+        return Ok(ApiResponse.Ok("Ticket deleted."));
+    }
 }
