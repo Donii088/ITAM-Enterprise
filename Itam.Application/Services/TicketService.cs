@@ -105,7 +105,7 @@ public sealed class TicketService : ITicketService
         return Map(ticket);
     }
 
-    public async Task<TicketDto> UpdateStatusAsync(Guid id, UpdateTicketStatusRequestDto request, CancellationToken ct = default)
+    public async Task<TicketDto> UpdateStatusAsync(Guid id, UpdateTicketStatusRequestDto request, Guid userId, CancellationToken ct = default)
     {
         var ticket = await LoadTrackedAsync(id, ct);
 
@@ -115,12 +115,18 @@ public sealed class TicketService : ITicketService
                 "Tickets are completed via the resolve endpoint, which records the repair history.");
         }
 
+
+        if (request.Status == TicketStatus.Cancelled && (userId != ticket.EmployeeId))
+        {
+            throw new BusinessRuleViolationException(
+                "Only ticket owner can cancell tickets.");
+        }
+
         if (ticket.Status is TicketStatus.Done or TicketStatus.Cancelled)
         {
             throw new BusinessRuleViolationException(
                 $"A ticket with status '{ticket.Status}' cannot change status.");
         }
-
         ticket.Status = request.Status;
         await _dbContext.SaveChangesAsync(ct);
 

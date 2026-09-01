@@ -97,8 +97,8 @@ export const TICKET_STATUS = {
   Open: 'Open',
   OnReview: 'OnReview',
   InProgress: 'InProgress',
-  Done: 'Done',
-  Cancelled: 'Cancelled',
+  // Done: 'Done',
+  // Cancelled: 'Cancelled',
 } as const;
 export type TicketStatus = (typeof TICKET_STATUS)[keyof typeof TICKET_STATUS];
 

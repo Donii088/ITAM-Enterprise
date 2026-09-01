@@ -6,6 +6,7 @@ using Itam.Application.Responses;
 using Itam.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Itam.WebApi.Controllers;
 
@@ -16,11 +17,13 @@ public sealed class TicketsController : ControllerBase
 {
     private readonly ITicketService _ticketService;
     private readonly IRepairService _repairService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public TicketsController(ITicketService ticketService, IRepairService repairService)
+    public TicketsController(ITicketService ticketService, IRepairService repairService, ICurrentUserService currentUserService)
     {
         _ticketService = ticketService;
         _repairService = repairService;
+        _currentUserService = currentUserService;
     }
 
     [HttpPost]
@@ -83,7 +86,12 @@ public sealed class TicketsController : ControllerBase
         [FromBody] UpdateTicketStatusRequestDto request,
         CancellationToken cancellationToken)
     {
-        var ticket = await _ticketService.UpdateStatusAsync(id, request, cancellationToken);
+        var userId = _currentUserService.UserId ?? throw new Exception("User is not logged in!");
+
+
+        var ticket = await _ticketService.UpdateStatusAsync(id, request, userId , cancellationToken);
+
+        
         return Ok(ApiResponse.Ok(ticket, "Ticket status updated successfully."));
     }
 }

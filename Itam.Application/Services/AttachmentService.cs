@@ -60,9 +60,9 @@ public sealed class AttachmentService : IAttachmentService
         _logger = logger;
     }
 
-    public async Task<AttachmentDto> UploadForTicketAsync(Guid ticketId, UploadAttachmentRequest request, CancellationToken ct = default)
+    public async Task<AttachmentDto> UploadForTicketAsync(Guid ticketId, UploadAttachmentRequest request, Guid userId ,CancellationToken ct = default)
     {
-        var userId = RequireUserId();
+         userId = RequireUserId();
 
         var ticket = await _dbContext.Tickets.SingleOrDefaultAsync(t => t.Id == ticketId, ct)
             ?? throw new EntityNotFoundException(nameof(Ticket), ticketId);
@@ -98,7 +98,7 @@ public sealed class AttachmentService : IAttachmentService
         return await SaveAsync(request, a => a.RepairHistoryId = repairId, "repairs", userId, ct);
     }
 
-    public async Task<AttachmentDto> UploadForAssetAsync(Guid assetId, UploadAttachmentRequest request, CancellationToken ct = default)
+    public async Task<AttachmentDto> UploadForAssetAsync(Guid assetId, UploadAttachmentRequest request,CancellationToken ct = default)
     {
         var userId = RequireUserId();
 
