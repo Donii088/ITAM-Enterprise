@@ -118,7 +118,7 @@ public sealed class TicketService : ITicketService
         return Map(ticket);
     }
 
-    public async Task<TicketDto> UpdateStatusAsync(Guid id, UpdateTicketStatusRequestDto request, Guid UserId, CancellationToken ct = default)
+    public async Task<TicketDto> UpdateStatusAsync(Guid id, UpdateTicketStatusRequestDto request, CancellationToken ct = default)
     {
         var ticket = await LoadTrackedAsync(id, ct);
 
@@ -131,32 +131,31 @@ public sealed class TicketService : ITicketService
         // This endpoint is admin-only (see [Authorize] on TicketsController.UpdateStatus), but
         // Cancelled specifically stays owner-only even here — otherwise an admin could cancel any
         // employee's ticket through this endpoint despite CancelAsync deliberately blocking that.
-
         if (request.Status == TicketStatus.Cancelled)
         {
             var userId = _currentUserService.UserId
                 ?? throw new UnauthorizedException("You must be authenticated.");
 
-            if (request.Status == TicketStatus.Cancelled && (userId != ticket.EmployeeId))
+            if (userId != ticket.EmployeeId)
             {
                 throw new BusinessRuleViolationException(
-                    "Only ticket owner can cancell tickets.");
+                    "Only the ticket's owner can cancel it.");
             }
-
-            if (ticket.Status is TicketStatus.Done or TicketStatus.Cancelled)
-            {
-                throw new BusinessRuleViolationException(
-                    $"A ticket with status '{ticket.Status}' cannot change status.");
-            }
-
-            ticket.Status = request.Status;
-            await _dbContext.SaveChangesAsync(ct);
-
-            _logger.LogInformation(
-                "Ticket {TicketId} status changed to {Status} by {UserId}.", ticket.Id, request.Status, _currentUserService.UserId);
-
-            return Map(ticket);
         }
+
+        if (ticket.Status is TicketStatus.Done or TicketStatus.Cancelled)
+        {
+            throw new BusinessRuleViolationException(
+                $"A ticket with status '{ticket.Status}' cannot change status.");
+        }
+
+        ticket.Status = request.Status;
+        await _dbContext.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "Ticket {TicketId} status changed to {Status} by {UserId}.", ticket.Id, request.Status, _currentUserService.UserId);
+
+        return Map(ticket);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
