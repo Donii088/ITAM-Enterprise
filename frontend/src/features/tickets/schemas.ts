@@ -14,9 +14,12 @@ export type CreateTicketFormValues = z.infer<typeof createTicketSchema>;
 // Done is intentionally excluded — a ticket can only reach Done through the resolve flow
 // (POST /tickets/{id}/resolve), which also records the repair history. The backend rejects a
 // manual status change to Done for the same reason (see TicketService.UpdateStatusAsync).
+// Cancelled is also excluded — this dialog is admin-only, but cancelling is reserved for the
+// ticket's own owner with no admin override (see TicketService.UpdateStatusAsync/CancelAsync),
+// so offering it here would always fail. Owners cancel via the separate Cancel action instead.
 export const updateTicketStatusSchema = z.object({
   status: z.enum(
-    [TICKET_STATUS.Open, TICKET_STATUS.OnReview, TICKET_STATUS.InProgress, TICKET_STATUS.Cancelled],
+    [TICKET_STATUS.Open, TICKET_STATUS.OnReview, TICKET_STATUS.InProgress],
     { errorMap: () => ({ message: 'Select a status' }) },
   ),
 });
