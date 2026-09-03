@@ -118,7 +118,7 @@ public sealed class TicketService : ITicketService
         return Map(ticket);
     }
 
-    public async Task<TicketDto> UpdateStatusAsync(Guid id, UpdateTicketStatusRequestDto request, Guid UserId, CancellationToken ct = default)
+    public async Task<TicketDto> UpdateStatusAsync(Guid id, UpdateTicketStatusRequestDto request, Guid userId, CancellationToken ct = default)
     {
         var ticket = await LoadTrackedAsync(id, ct);
 
