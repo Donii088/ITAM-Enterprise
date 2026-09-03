@@ -7,10 +7,11 @@ import { updateTicketStatusSchema, type UpdateTicketStatusFormValues } from '@/f
 import { useUpdateTicketStatus } from '@/features/tickets/useTickets';
 import { TICKET_STATUS, TICKET_STATUS_LABELS, type TicketStatus } from '@/types';
 
-// Done is not offered here — it's only reachable through the resolve flow. See the matching
-// comment in features/tickets/schemas.ts.
+// Done and Cancelled are not offered here — Done is only reachable through the resolve flow,
+// and Cancelled is owner-only (this dialog is admin-only). See the matching comment in
+// features/tickets/schemas.ts.
 const STATUS_OPTIONS = Object.values(TICKET_STATUS)
-  .filter((v) => v !== TICKET_STATUS.Done)
+  .filter((v) => v !== TICKET_STATUS.Done && v !== TICKET_STATUS.Cancelled)
   .map((v) => ({ value: v, label: TICKET_STATUS_LABELS[v] }));
 
 export interface TicketStatusDialogProps {
