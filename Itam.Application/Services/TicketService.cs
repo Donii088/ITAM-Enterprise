@@ -132,7 +132,7 @@ public sealed class TicketService : ITicketService
         if (request.Status == TicketStatus.Cancelled && (userId != ticket.EmployeeId))
         {
             throw new BusinessRuleViolationException(
-                "Only ticket owner can cancell tickets.");
+                "Only ticket owner can cancel tickets.");
         }
 
         if (ticket.Status is TicketStatus.Done or TicketStatus.Cancelled)
