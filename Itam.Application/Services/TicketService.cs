@@ -131,6 +131,7 @@ public sealed class TicketService : ITicketService
         // This endpoint is admin-only (see [Authorize] on TicketsController.UpdateStatus), but
         // Cancelled specifically stays owner-only even here — otherwise an admin could cancel any
         // employee's ticket through this endpoint despite CancelAsync deliberately blocking that.
+
         if (request.Status == TicketStatus.Cancelled)
         {
             var userId = _currentUserService.UserId
