@@ -8,5 +8,9 @@ namespace Itam.Application.Validators.Assets.Dock;
 
 public sealed class CreateDockRequestValidator : AbstractValidator<CreateDockRequestDto>
 {
-    public CreateDockRequestValidator() => RuleFor(x => x.Brand).NotEmpty().MaximumLength(100);
+    public CreateDockRequestValidator()
+    {
+        RuleFor(x => x.SerialNumber).MaximumLength(150).When(x => !string.IsNullOrWhiteSpace(x.SerialNumber));
+        RuleFor(x => x.Brand).NotEmpty().MaximumLength(100);
+    }
 }

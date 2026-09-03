@@ -8,6 +8,7 @@ export const ASSET_TYPE = {
   Monitor: 'Monitor',
   Dock: 'Dock',
   KeyboardMouseSet: 'KeyboardMouseSet',
+  Headset: 'Headset',
 } as const;
 export type AssetType = (typeof ASSET_TYPE)[keyof typeof ASSET_TYPE];
 
@@ -17,6 +18,7 @@ export const ASSET_TYPE_LABELS: Record<AssetType, string> = {
   Monitor: 'Monitor',
   Dock: 'Dock',
   KeyboardMouseSet: 'Keyboard & Mouse Set',
+  Headset: 'Headset',
 };
 
 export const ASSET_STATUS = {
@@ -97,8 +99,8 @@ export const TICKET_STATUS = {
   Open: 'Open',
   OnReview: 'OnReview',
   InProgress: 'InProgress',
-  // Done: 'Done',
-  // Cancelled: 'Cancelled',
+  Done: 'Done',
+  Cancelled: 'Cancelled',
 } as const;
 export type TicketStatus = (typeof TICKET_STATUS)[keyof typeof TICKET_STATUS];
 

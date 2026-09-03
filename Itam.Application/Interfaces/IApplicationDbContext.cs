@@ -13,6 +13,7 @@ public interface IApplicationDbContext
     DbSet<Monitor> Monitors { get; }
     DbSet<Dock> Docks { get; }
     DbSet<KeyboardMouseSet> KeyboardMouseSets { get; }
+    DbSet<Headset> Headsets { get; }
     DbSet<Storage> StorageDevices { get; }
     DbSet<AssetAssignment> AssetAssignments { get; }
     DbSet<Ticket> Tickets { get; }

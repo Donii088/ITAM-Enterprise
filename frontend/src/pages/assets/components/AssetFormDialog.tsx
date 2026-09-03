@@ -12,11 +12,13 @@ import { StorageManagerField } from './StorageManagerField';
 import {
   desktopPcSchema,
   dockSchema,
+  headsetSchema,
   keyboardMouseSetSchema,
   laptopSchema,
   monitorSchema,
   type DesktopPcFormValues,
   type DockFormValues,
+  type HeadsetFormValues,
   type KeyboardMouseSetFormValues,
   type LaptopFormValues,
   type MonitorFormValues,
@@ -25,6 +27,7 @@ import { useAttachStorageToAsset, useCreateAsset, useUpdateAsset } from '@/featu
 import {
   ASSET_TYPE,
   ASSET_TYPE_LABELS,
+  CONNECTION_TYPE,
   CONNECTION_TYPE_LABELS,
   type AssetDetails,
   type AssetType,
@@ -40,6 +43,11 @@ export interface AssetFormDialogProps {
 
 const ASSET_TYPE_OPTIONS = Object.values(ASSET_TYPE).map((value) => ({ value, label: ASSET_TYPE_LABELS[value] }));
 const CONNECTION_TYPE_OPTIONS = Object.entries(CONNECTION_TYPE_LABELS).map(([value, label]) => ({ value, label }));
+// Headsets only support Wired/Bluetooth, unlike KeyboardMouseSet which also allows WirelessDongle.
+const HEADSET_CONNECTION_TYPE_OPTIONS = [
+  { value: CONNECTION_TYPE.Wired, label: CONNECTION_TYPE_LABELS.Wired },
+  { value: CONNECTION_TYPE.Bluetooth, label: CONNECTION_TYPE_LABELS.Bluetooth },
+];
 
 function LaptopOrDesktopFields({ control }: { control: ReturnType<typeof useForm<LaptopFormValues>>['control'] }) {
   return (
@@ -194,6 +202,7 @@ function MonitorForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset?:
   const { control, handleSubmit, formState } = useForm<MonitorFormValues>({
     resolver: zodResolver(monitorSchema),
     defaultValues: {
+      serialNumber: asset?.serialNumber ?? '',
       brand: asset?.brand ?? '',
       resolution: asset?.resolution ?? '',
       refreshRate: asset?.refreshRate ?? 0,
@@ -216,6 +225,14 @@ function MonitorForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset?:
         <FormInput control={control} name="resolution" label="Resolution" placeholder="2560x1440" required />
         <FormInput control={control} name="refreshRate" label="Refresh rate (Hz)" type="number" min={1} placeholder="144" required />
         <FormInput control={control} name="size" label="Size (inches)" type="number" step="0.1" min={0.1} placeholder="27" required />
+        <FormInput
+          control={control}
+          name="serialNumber"
+          label="Serial number"
+          placeholder="Optional"
+          hint="Optional"
+          className="sm:col-span-2"
+        />
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone} disabled={formState.isSubmitting}>
@@ -234,7 +251,7 @@ function DockForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset?: As
   const updateMutation = useUpdateAsset();
   const { control, handleSubmit, formState } = useForm<DockFormValues>({
     resolver: zodResolver(dockSchema),
-    defaultValues: { brand: asset?.brand ?? '' },
+    defaultValues: { serialNumber: asset?.serialNumber ?? '', brand: asset?.brand ?? '' },
   });
 
   function onSubmit(values: DockFormValues) {
@@ -248,6 +265,7 @@ function DockForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset?: As
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <FormInput control={control} name="brand" label="Brand" placeholder="Dell, CalDigit…" required />
+      <FormInput control={control} name="serialNumber" label="Serial number" placeholder="Optional" hint="Optional" />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone} disabled={formState.isSubmitting}>
           Cancel
@@ -274,6 +292,7 @@ function KeyboardMouseSetForm({
   const { control, handleSubmit, formState } = useForm<KeyboardMouseSetFormValues>({
     resolver: zodResolver(keyboardMouseSetSchema),
     defaultValues: {
+      serialNumber: asset?.serialNumber ?? '',
       brand: asset?.brand ?? '',
       connectionType: asset?.connectionType ?? undefined,
     },
@@ -291,12 +310,58 @@ function KeyboardMouseSetForm({
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <FormInput control={control} name="brand" label="Brand" placeholder="Logitech, Microsoft…" required />
       <FormSelect control={control} name="connectionType" label="Connection type" options={CONNECTION_TYPE_OPTIONS} required />
+      <FormInput control={control} name="serialNumber" label="Serial number" placeholder="Optional" hint="Optional" />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone} disabled={formState.isSubmitting}>
           Cancel
         </Button>
         <Button type="submit" isLoading={formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>
           {mode === 'create' ? 'Create set' : 'Save changes'}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+function HeadsetForm({ mode, asset, onDone }: { mode: 'create' | 'edit'; asset?: AssetDetails; onDone: () => void }) {
+  const createMutation = useCreateAsset();
+  const updateMutation = useUpdateAsset();
+  const { control, handleSubmit, formState } = useForm<HeadsetFormValues>({
+    resolver: zodResolver(headsetSchema),
+    defaultValues: {
+      serialNumber: asset?.serialNumber ?? '',
+      brand: asset?.brand ?? '',
+      // Headset assets are always Wired/Bluetooth (enforced by backend validation), so this
+      // narrowing from the shared ConnectionType enum is safe.
+      connectionType: (asset?.connectionType as HeadsetFormValues['connectionType']) ?? undefined,
+    },
+  });
+
+  function onSubmit(values: HeadsetFormValues) {
+    const mutation =
+      mode === 'create'
+        ? createMutation.mutateAsync({ assetType: ASSET_TYPE.Headset, payload: values })
+        : updateMutation.mutateAsync({ assetType: ASSET_TYPE.Headset, id: asset!.id, payload: values });
+    mutation.then(onDone).catch(() => undefined);
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+      <FormInput control={control} name="brand" label="Brand" placeholder="Jabra, Logitech…" required />
+      <FormSelect
+        control={control}
+        name="connectionType"
+        label="Connection type"
+        options={HEADSET_CONNECTION_TYPE_OPTIONS}
+        required
+      />
+      <FormInput control={control} name="serialNumber" label="Serial number" placeholder="Optional" hint="Optional" />
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onDone} disabled={formState.isSubmitting}>
+          Cancel
+        </Button>
+        <Button type="submit" isLoading={formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>
+          {mode === 'create' ? 'Create headset' : 'Save changes'}
         </Button>
       </DialogFooter>
     </form>
@@ -346,6 +411,7 @@ export function AssetFormDialog({ open, onOpenChange, fixedType, asset }: AssetF
         {selectedType === ASSET_TYPE.KeyboardMouseSet && (
           <KeyboardMouseSetForm mode={mode} asset={asset} onDone={handleDone} />
         )}
+        {selectedType === ASSET_TYPE.Headset && <HeadsetForm mode={mode} asset={asset} onDone={handleDone} />}
       </DialogContent>
     </Dialog>
   );

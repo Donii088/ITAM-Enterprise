@@ -1,3 +1,3 @@
 namespace Itam.Application.DTOs.Assets;
 
-public sealed record UpdateDockRequestDto(string Brand);
+public sealed record UpdateDockRequestDto(string? SerialNumber, string Brand);

@@ -83,6 +83,15 @@ public sealed class AssetsController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(asset, "Keyboard & mouse set created successfully."));
     }
 
+    [HttpPost("headsets")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
+    public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> CreateHeadset(
+        [FromBody] CreateHeadsetRequestDto request, CancellationToken cancellationToken)
+    {
+        var asset = await _assetService.CreateHeadsetAsync(request, cancellationToken);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(asset, "Headset created successfully."));
+    }
+
     [HttpPut("laptops/{id:guid}")]
     [Authorize(Roles = RoleConstants.ItAdmin)]
     public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> UpdateLaptop(
@@ -126,6 +135,15 @@ public sealed class AssetsController : ControllerBase
     {
         var asset = await _assetService.UpdateKeyboardMouseSetAsync(id, request, cancellationToken);
         return Ok(ApiResponse.Ok(asset, "Keyboard & mouse set updated successfully."));
+    }
+
+    [HttpPut("headsets/{id:guid}")]
+    [Authorize(Roles = RoleConstants.ItAdmin)]
+    public async Task<ActionResult<ApiResponse<AssetDetailsDto>>> UpdateHeadset(
+        Guid id, [FromBody] UpdateHeadsetRequestDto request, CancellationToken cancellationToken)
+    {
+        var asset = await _assetService.UpdateHeadsetAsync(id, request, cancellationToken);
+        return Ok(ApiResponse.Ok(asset, "Headset updated successfully."));
     }
 
     [HttpPost("{id:guid}/status")]

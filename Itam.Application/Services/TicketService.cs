@@ -118,7 +118,7 @@ public sealed class TicketService : ITicketService
         return Map(ticket);
     }
 
-    public async Task<TicketDto> UpdateStatusAsync(Guid id, UpdateTicketStatusRequestDto request, Guid UserId, CancellationToken ct = default)
+    public async Task<TicketDto> UpdateStatusAsync(Guid id, UpdateTicketStatusRequestDto request, CancellationToken ct = default)
     {
         var ticket = await LoadTrackedAsync(id, ct);
 
@@ -128,11 +128,18 @@ public sealed class TicketService : ITicketService
                 "Tickets are completed via the resolve endpoint, which records the repair history.");
         }
 
-
-        if (request.Status == TicketStatus.Cancelled && (userId != ticket.EmployeeId))
+        // This endpoint is admin-only (see [Authorize] on TicketsController.UpdateStatus), but
+        // Cancelled specifically stays owner-only even here — otherwise an admin could cancel any
+        // employee's ticket through this endpoint despite CancelAsync deliberately blocking that.
+        if (request.Status == TicketStatus.Cancelled)
         {
-            throw new BusinessRuleViolationException(
-                "Only ticket owner can cancell tickets.");
+            var userId = _currentUserService.UserId
+                ?? throw new UnauthorizedException("You must be authenticated.");
+
+            if (ticket.EmployeeId != userId)
+            {
+                throw new ForbiddenException("Only the ticket's owner can cancel it.");
+            }
         }
 
         if (ticket.Status is TicketStatus.Done or TicketStatus.Cancelled)
@@ -140,10 +147,12 @@ public sealed class TicketService : ITicketService
             throw new BusinessRuleViolationException(
                 $"A ticket with status '{ticket.Status}' cannot change status.");
         }
+
         ticket.Status = request.Status;
         await _dbContext.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Ticket {TicketId} status changed to {Status} by admin.", ticket.Id, request.Status);
+        _logger.LogInformation(
+            "Ticket {TicketId} status changed to {Status} by {UserId}.", ticket.Id, request.Status, _currentUserService.UserId);
 
         return Map(ticket);
     }
@@ -279,9 +288,10 @@ public sealed class TicketService : ITicketService
         {
             Laptop l => (l.Brand, l.Model, l.SerialNumber),
             DesktopPc p => (p.Brand, p.Model, p.SerialNumber),
-            Monitor m => (m.Brand, m.Resolution, (string?)null),
-            Dock d => (d.Brand, (string?)null, (string?)null),
-            KeyboardMouseSet k => (k.Brand, (string?)null, (string?)null),
+            Monitor m => (m.Brand, m.Resolution, m.SerialNumber),
+            Dock d => (d.Brand, (string?)null, d.SerialNumber),
+            KeyboardMouseSet k => (k.Brand, (string?)null, k.SerialNumber),
+            Headset h => (h.Brand, (string?)null, h.SerialNumber),
             _ => ((string?)null, (string?)null, (string?)null)
         };
 

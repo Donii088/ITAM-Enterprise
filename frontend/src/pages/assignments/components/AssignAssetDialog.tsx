@@ -1,8 +1,10 @@
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { SearchInput } from '@/components/ui/SearchInput';
 import { FormSelect } from '@/components/shared/form/FormSelect';
 import { useAssignAsset } from '@/features/assignments/useAssignments';
 import { useAssetsList } from '@/features/assets/useAssets';
@@ -17,7 +19,15 @@ type AssignFormValues = z.infer<typeof assignSchema>;
 
 export function AssignAssetDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const assignAsset = useAssignAsset();
-  const { data: availableAssets, isLoading: assetsLoading } = useAssetsList({ status: ASSET_STATUS.Available, pageSize: 100 });
+  const [assetSearchTerm, setAssetSearchTerm] = React.useState('');
+  // Matches by brand, model, and — importantly — serial number (server-side, so it also covers
+  // assets not among the first page of results), since assets commonly share the same
+  // brand/model and serial is often the only way to tell them apart when assigning.
+  const { data: availableAssets, isLoading: assetsLoading } = useAssetsList({
+    status: ASSET_STATUS.Available,
+    pageSize: 100,
+    searchTerm: assetSearchTerm || undefined,
+  });
   const { data: employees, isLoading: employeesLoading } = useUsersList({ pageSize: 100, includeInactive: false });
 
   const { control, handleSubmit, reset, formState } = useForm<AssignFormValues>({
@@ -47,6 +57,11 @@ export function AssignAssetDialog({ open, onOpenChange }: { open: boolean; onOpe
           <DialogTitle>Assign asset</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          <SearchInput
+            value={assetSearchTerm}
+            onChange={setAssetSearchTerm}
+            placeholder="Search by brand, model, or serial number…"
+          />
           <FormSelect
             control={control}
             name="assetId"
@@ -55,7 +70,13 @@ export function AssignAssetDialog({ open, onOpenChange }: { open: boolean; onOpe
             placeholder={assetsLoading ? 'Loading assets…' : 'Select an available asset'}
             disabled={assetsLoading}
             required
-            hint={!assetsLoading && assetOptions.length === 0 ? 'No available assets to assign.' : undefined}
+            hint={
+              !assetsLoading && assetOptions.length === 0
+                ? assetSearchTerm
+                  ? 'No available assets match your search.'
+                  : 'No available assets to assign.'
+                : undefined
+            }
           />
           <FormSelect
             control={control}

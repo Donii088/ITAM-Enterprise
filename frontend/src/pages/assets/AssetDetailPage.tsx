@@ -130,7 +130,7 @@ export default function AssetDetailPage() {
                 <DetailField label="Size" value={asset.size ? `${asset.size}"` : undefined} />
               </>
             )}
-            {asset.assetType === ASSET_TYPE.KeyboardMouseSet && (
+            {(asset.assetType === ASSET_TYPE.KeyboardMouseSet || asset.assetType === ASSET_TYPE.Headset) && (
               <DetailField label="Connection" value={asset.connectionType} />
             )}
             <DetailField label="Created" value={formatDate(asset.createdAt)} />

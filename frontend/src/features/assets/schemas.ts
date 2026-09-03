@@ -14,7 +14,12 @@ export type LaptopFormValues = z.infer<typeof laptopSchema>;
 export const desktopPcSchema = laptopSchema;
 export type DesktopPcFormValues = z.infer<typeof desktopPcSchema>;
 
+// Optional, unlike Laptop/DesktopPc's serialNumber — no .min(1, ...), so an empty value passes
+// validation. The backend normalizes a blank/whitespace-only value to "not set" either way.
+const optionalSerialNumber = z.string().trim().max(150, 'Maximum 150 characters');
+
 export const monitorSchema = z.object({
+  serialNumber: optionalSerialNumber,
   brand: z.string().trim().min(1, 'Brand is required').max(100, 'Maximum 100 characters'),
   resolution: z.string().trim().min(1, 'Resolution is required').max(50, 'Maximum 50 characters'),
   refreshRate: z.coerce.number({ invalid_type_error: 'Refresh rate is required' }).int().positive('Must be greater than 0'),
@@ -23,17 +28,30 @@ export const monitorSchema = z.object({
 export type MonitorFormValues = z.infer<typeof monitorSchema>;
 
 export const dockSchema = z.object({
+  serialNumber: optionalSerialNumber,
   brand: z.string().trim().min(1, 'Brand is required').max(100, 'Maximum 100 characters'),
 });
 export type DockFormValues = z.infer<typeof dockSchema>;
 
 export const keyboardMouseSetSchema = z.object({
+  serialNumber: optionalSerialNumber,
   brand: z.string().trim().min(1, 'Brand is required').max(100, 'Maximum 100 characters'),
   connectionType: z.enum([CONNECTION_TYPE.Wired, CONNECTION_TYPE.Bluetooth, CONNECTION_TYPE.WirelessDongle], {
     errorMap: () => ({ message: 'Select a connection type' }),
   }),
 });
 export type KeyboardMouseSetFormValues = z.infer<typeof keyboardMouseSetSchema>;
+
+export const headsetSchema = z.object({
+  serialNumber: optionalSerialNumber,
+  brand: z.string().trim().min(1, 'Brand is required').max(100, 'Maximum 100 characters'),
+  // Headsets only support Wired/Bluetooth, unlike KeyboardMouseSet which also allows
+  // WirelessDongle.
+  connectionType: z.enum([CONNECTION_TYPE.Wired, CONNECTION_TYPE.Bluetooth], {
+    errorMap: () => ({ message: 'Select a connection type' }),
+  }),
+});
+export type HeadsetFormValues = z.infer<typeof headsetSchema>;
 
 export const storageSchema = z
   .object({

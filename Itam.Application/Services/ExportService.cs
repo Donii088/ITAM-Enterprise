@@ -49,9 +49,14 @@ public sealed class ExportService : IExportService
                     || ((DesktopPc)a).Model.ToLower().Contains(term)
                     || ((DesktopPc)a).SerialNumber.ToLower().Contains(term)))
                 || (a is Monitor && (((Monitor)a).Brand.ToLower().Contains(term)
-                    || ((Monitor)a).Resolution.ToLower().Contains(term)))
-                || (a is Dock && ((Dock)a).Brand.ToLower().Contains(term))
-                || (a is KeyboardMouseSet && ((KeyboardMouseSet)a).Brand.ToLower().Contains(term)));
+                    || ((Monitor)a).Resolution.ToLower().Contains(term)
+                    || (((Monitor)a).SerialNumber != null && ((Monitor)a).SerialNumber!.ToLower().Contains(term))))
+                || (a is Dock && (((Dock)a).Brand.ToLower().Contains(term)
+                    || (((Dock)a).SerialNumber != null && ((Dock)a).SerialNumber!.ToLower().Contains(term))))
+                || (a is KeyboardMouseSet && (((KeyboardMouseSet)a).Brand.ToLower().Contains(term)
+                    || (((KeyboardMouseSet)a).SerialNumber != null && ((KeyboardMouseSet)a).SerialNumber!.ToLower().Contains(term))))
+                || (a is Headset && (((Headset)a).Brand.ToLower().Contains(term)
+                    || (((Headset)a).SerialNumber != null && ((Headset)a).SerialNumber!.ToLower().Contains(term)))));
         }
 
         var list = await assets
