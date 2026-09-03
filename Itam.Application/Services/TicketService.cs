@@ -136,25 +136,26 @@ public sealed class TicketService : ITicketService
             var userId = _currentUserService.UserId
                 ?? throw new UnauthorizedException("You must be authenticated.");
 
-        if (request.Status == TicketStatus.Cancelled && (userId != ticket.EmployeeId))
-        {
-            throw new BusinessRuleViolationException(
-                "Only ticket owner can cancell tickets.");
+            if (request.Status == TicketStatus.Cancelled && (userId != ticket.EmployeeId))
+            {
+                throw new BusinessRuleViolationException(
+                    "Only ticket owner can cancell tickets.");
+            }
+
+            if (ticket.Status is TicketStatus.Done or TicketStatus.Cancelled)
+            {
+                throw new BusinessRuleViolationException(
+                    $"A ticket with status '{ticket.Status}' cannot change status.");
+            }
+
+            ticket.Status = request.Status;
+            await _dbContext.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "Ticket {TicketId} status changed to {Status} by {UserId}.", ticket.Id, request.Status, _currentUserService.UserId);
+
+            return Map(ticket);
         }
-
-        if (ticket.Status is TicketStatus.Done or TicketStatus.Cancelled)
-        {
-            throw new BusinessRuleViolationException(
-                $"A ticket with status '{ticket.Status}' cannot change status.");
-        }
-
-        ticket.Status = request.Status;
-        await _dbContext.SaveChangesAsync(ct);
-
-        _logger.LogInformation(
-            "Ticket {TicketId} status changed to {Status} by {UserId}.", ticket.Id, request.Status, _currentUserService.UserId);
-
-        return Map(ticket);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
