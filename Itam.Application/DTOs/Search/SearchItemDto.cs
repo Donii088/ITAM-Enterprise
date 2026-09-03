@@ -5,4 +5,6 @@ public sealed record SearchItemDto(
     string Type,
     string Title,
     string? Subtitle,
-    string? Status);
+    string? Status,
+    string? Priority,
+    DateTime CreatedAt);

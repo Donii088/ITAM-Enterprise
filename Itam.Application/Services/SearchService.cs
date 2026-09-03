@@ -70,7 +70,11 @@ public sealed class SearchService : ISearchService
                 "User",
                 $"{u.FirstName} {u.LastName}",
                 u.Email,
-                u.Role.ToString()))
+                u.Role.ToString(),
+                // Priority is otherwise ticket-specific; reused here to surface account status,
+                // matching this DTO's existing pattern of repurposing generic fields per entity type.
+                u.IsActive ? "Active" : "Inactive",
+                u.CreatedAt))
             .ToList();
     }
 
@@ -94,9 +98,14 @@ public sealed class SearchService : ISearchService
                     || ((DesktopPc)a).Model.ToLower().Contains(term)
                     || ((DesktopPc)a).SerialNumber.ToLower().Contains(term)))
                 || (a is Monitor && (((Monitor)a).Brand.ToLower().Contains(term)
-                    || ((Monitor)a).Resolution.ToLower().Contains(term)))
-                || (a is Dock && ((Dock)a).Brand.ToLower().Contains(term))
-                || (a is KeyboardMouseSet && ((KeyboardMouseSet)a).Brand.ToLower().Contains(term))
+                    || ((Monitor)a).Resolution.ToLower().Contains(term)
+                    || (((Monitor)a).SerialNumber != null && ((Monitor)a).SerialNumber!.ToLower().Contains(term))))
+                || (a is Dock && (((Dock)a).Brand.ToLower().Contains(term)
+                    || (((Dock)a).SerialNumber != null && ((Dock)a).SerialNumber!.ToLower().Contains(term))))
+                || (a is KeyboardMouseSet && (((KeyboardMouseSet)a).Brand.ToLower().Contains(term)
+                    || (((KeyboardMouseSet)a).SerialNumber != null && ((KeyboardMouseSet)a).SerialNumber!.ToLower().Contains(term))))
+                || (a is Headset && (((Headset)a).Brand.ToLower().Contains(term)
+                    || (((Headset)a).SerialNumber != null && ((Headset)a).SerialNumber!.ToLower().Contains(term))))
                 // UnassignedAt == null (active assignment) guarantees a non-null employee.
                 || _dbContext.AssetAssignments.Any(x => x.AssetId == a.Id
                     && x.UnassignedAt == null
@@ -114,7 +123,9 @@ public sealed class SearchService : ISearchService
                     "Asset",
                     $"{brand} {model}".Trim(),
                     serial,
-                    a.Status.ToString());
+                    a.Status.ToString(),
+                    null,
+                    a.CreatedAt);
             })
             .ToList();
     }
@@ -131,7 +142,12 @@ public sealed class SearchService : ISearchService
 
         var matches = await query
             .Include(t => t.Employee)
-            .Where(t => t.Title.ToLower().Contains(term) || t.Description.ToLower().Contains(term))
+            .Where(t => t.Title.ToLower().Contains(term)
+                || t.Description.ToLower().Contains(term)
+                // Lets a search for a person's name surface their tickets too, not just tickets
+                // whose title/description happens to mention that text. Matches the same
+                // "search by owner's name" pattern already used for assets above.
+                || (t.Employee != null && (t.Employee.FirstName + " " + t.Employee.LastName).ToLower().Contains(term)))
             .OrderByDescending(t => t.CreatedAt)
             .Take(limit)
             .ToListAsync(ct);
@@ -142,7 +158,9 @@ public sealed class SearchService : ISearchService
                 "Ticket",
                 t.Title,
                 t.Employee is null ? "Deleted User" : $"{t.Employee.FirstName} {t.Employee.LastName}",
-                t.Status.ToString()))
+                t.Status.ToString(),
+                t.Priority.ToString(),
+                t.CreatedAt))
             .ToList();
     }
 }

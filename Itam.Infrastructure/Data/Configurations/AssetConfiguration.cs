@@ -26,6 +26,7 @@ public sealed class AssetConfiguration : IEntityTypeConfiguration<Asset>
             .HasValue<DesktopPc>(AssetType.DesktopPc)
             .HasValue<Monitor>(AssetType.Monitor)
             .HasValue<Dock>(AssetType.Dock)
-            .HasValue<KeyboardMouseSet>(AssetType.KeyboardMouseSet);
+            .HasValue<KeyboardMouseSet>(AssetType.KeyboardMouseSet)
+            .HasValue<Headset>(AssetType.Headset);
     }
 }

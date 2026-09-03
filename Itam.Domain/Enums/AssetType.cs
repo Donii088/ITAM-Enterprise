@@ -6,5 +6,6 @@ public enum AssetType
     DesktopPc = 1,
     Monitor = 2,
     Dock = 3,
-    KeyboardMouseSet = 4
+    KeyboardMouseSet = 4,
+    Headset = 5
 }

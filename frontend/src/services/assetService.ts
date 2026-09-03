@@ -6,6 +6,7 @@ import type {
   AssetType,
   CreateDesktopPcRequest,
   CreateDockRequest,
+  CreateHeadsetRequest,
   CreateKeyboardMouseSetRequest,
   CreateLaptopRequest,
   CreateMonitorRequest,
@@ -17,6 +18,7 @@ import type {
   UpdateAssetStatusRequest,
   UpdateDesktopPcRequest,
   UpdateDockRequest,
+  UpdateHeadsetRequest,
   UpdateKeyboardMouseSetRequest,
   UpdateLaptopRequest,
   UpdateMonitorRequest,
@@ -29,6 +31,7 @@ const CREATE_PATH_BY_TYPE: Record<AssetType, string> = {
   Monitor: '/assets/monitors',
   Dock: '/assets/docks',
   KeyboardMouseSet: '/assets/keyboard-mouse-sets',
+  Headset: '/assets/headsets',
 };
 
 export const assetService = {
@@ -47,6 +50,8 @@ export const assetService = {
     unwrapResponse<AssetDetails>(apiClient.post(CREATE_PATH_BY_TYPE.Dock, payload)),
   createKeyboardMouseSet: (payload: CreateKeyboardMouseSetRequest) =>
     unwrapResponse<AssetDetails>(apiClient.post(CREATE_PATH_BY_TYPE.KeyboardMouseSet, payload)),
+  createHeadset: (payload: CreateHeadsetRequest) =>
+    unwrapResponse<AssetDetails>(apiClient.post(CREATE_PATH_BY_TYPE.Headset, payload)),
 
   updateLaptop: (id: string, payload: UpdateLaptopRequest) =>
     unwrapResponse<AssetDetails>(apiClient.put(`/assets/laptops/${id}`, payload)),
@@ -58,6 +63,8 @@ export const assetService = {
     unwrapResponse<AssetDetails>(apiClient.put(`/assets/docks/${id}`, payload)),
   updateKeyboardMouseSet: (id: string, payload: UpdateKeyboardMouseSetRequest) =>
     unwrapResponse<AssetDetails>(apiClient.put(`/assets/keyboard-mouse-sets/${id}`, payload)),
+  updateHeadset: (id: string, payload: UpdateHeadsetRequest) =>
+    unwrapResponse<AssetDetails>(apiClient.put(`/assets/headsets/${id}`, payload)),
 
   updateStatus: (id: string, payload: UpdateAssetStatusRequest) =>
     unwrapResponse<AssetDetails>(apiClient.post(`/assets/${id}/status`, payload)),
@@ -86,6 +93,8 @@ export function createAssetForType(assetType: AssetType, payload: Record<string,
       return assetService.createDock(payload as unknown as CreateDockRequest);
     case 'KeyboardMouseSet':
       return assetService.createKeyboardMouseSet(payload as unknown as CreateKeyboardMouseSetRequest);
+    case 'Headset':
+      return assetService.createHeadset(payload as unknown as CreateHeadsetRequest);
   }
 }
 
@@ -101,5 +110,7 @@ export function updateAssetForType(assetType: AssetType, id: string, payload: Re
       return assetService.updateDock(id, payload as unknown as UpdateDockRequest);
     case 'KeyboardMouseSet':
       return assetService.updateKeyboardMouseSet(id, payload as unknown as UpdateKeyboardMouseSetRequest);
+    case 'Headset':
+      return assetService.updateHeadset(id, payload as unknown as UpdateHeadsetRequest);
   }
 }

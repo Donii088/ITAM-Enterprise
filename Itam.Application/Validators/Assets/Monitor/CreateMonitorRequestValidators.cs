@@ -10,6 +10,7 @@ public sealed class CreateMonitorRequestValidator : AbstractValidator<CreateMoni
 {
     public CreateMonitorRequestValidator()
     {
+        RuleFor(x => x.SerialNumber).MaximumLength(150).When(x => !string.IsNullOrWhiteSpace(x.SerialNumber));
         RuleFor(x => x.Brand).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Resolution).NotEmpty().MaximumLength(50);
         RuleFor(x => x.RefreshRate).GreaterThan(0);

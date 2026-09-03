@@ -188,9 +188,10 @@ public sealed class AssignmentService : IAssignmentService
         {
             Laptop l => (l.Brand, l.Model, l.SerialNumber),
             DesktopPc p => (p.Brand, p.Model, p.SerialNumber),
-            Monitor m => (m.Brand, m.Resolution, (string?)null),
-            Dock d => (d.Brand, (string?)null, (string?)null),
-            KeyboardMouseSet k => (k.Brand, (string?)null, (string?)null),
+            Monitor m => (m.Brand, m.Resolution, m.SerialNumber),
+            Dock d => (d.Brand, (string?)null, d.SerialNumber),
+            KeyboardMouseSet k => (k.Brand, (string?)null, k.SerialNumber),
+            Headset h => (h.Brand, (string?)null, h.SerialNumber),
             _ => ((string?)null, (string?)null, (string?)null)
         };
 

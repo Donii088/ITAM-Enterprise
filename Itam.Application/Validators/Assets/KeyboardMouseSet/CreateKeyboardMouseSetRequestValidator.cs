@@ -10,6 +10,7 @@ namespace Itam.Application.Validators.Assets.KeyboardMouseSet
     {
         public CreateKeyboardMouseSetRequestValidator()
         {
+            RuleFor(x => x.SerialNumber).MaximumLength(150).When(x => !string.IsNullOrWhiteSpace(x.SerialNumber));
             RuleFor(x => x.Brand).NotEmpty().MaximumLength(100);
             RuleFor(x => x.ConnectionType).IsInEnum();
         }
