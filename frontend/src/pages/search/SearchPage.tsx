@@ -12,8 +12,9 @@ import { Alert } from '@/components/ui/Alert';
 import { useSearch } from '@/features/search/useSearch';
 import { useAuth } from '@/features/auth/useAuth';
 import { isItAdmin } from '@/lib/permissions';
+import { formatDate } from '@/lib/formatters';
 import { routes } from '@/routes/routes';
-import type { SearchItem } from '@/types';
+import { TICKET_PRIORITY_BADGE, type SearchItem, type TicketPriority } from '@/types';
 
 function ResultGroup({
   title,
@@ -46,8 +47,16 @@ function ResultGroup({
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
                     {item.subtitle && <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>}
+                    <p className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</p>
                   </div>
-                  {item.status && <Badge variant="default">{item.status}</Badge>}
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    {item.status && <Badge variant="default">{item.status}</Badge>}
+                    {item.priority && (
+                      <Badge variant={TICKET_PRIORITY_BADGE[item.priority as TicketPriority] ?? 'default'}>
+                        {item.priority}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               );
               return (
@@ -124,7 +133,15 @@ export default function SearchPage() {
                     items={data.assets}
                     linkFor={admin ? (item) => routes.assets.detail(item.id) : undefined}
                   />
-                  <ResultGroup title="Users" icon={Users2} items={data.users} />
+                  <ResultGroup
+                    title="Users"
+                    icon={Users2}
+                    items={data.users}
+                    // /users/:id is IT-Admin-only. Non-admins only ever get themselves back as a
+                    // user match (enforced server-side in SearchService), so their own profile
+                    // page is always the correct — and always permitted — destination.
+                    linkFor={(item) => (admin ? routes.users.detail(item.id) : routes.profile)}
+                  />
                   <ResultGroup title="Tickets" icon={Ticket} items={data.tickets} linkFor={(item) => routes.tickets.detail(item.id)} />
                 </div>
               )}

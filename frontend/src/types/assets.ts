@@ -82,6 +82,7 @@ export interface CreateDesktopPcRequest {
 export type UpdateDesktopPcRequest = CreateDesktopPcRequest;
 
 export interface CreateMonitorRequest {
+  serialNumber?: string | null;
   brand: string;
   resolution: string;
   refreshRate: number;
@@ -90,15 +91,24 @@ export interface CreateMonitorRequest {
 export type UpdateMonitorRequest = CreateMonitorRequest;
 
 export interface CreateDockRequest {
+  serialNumber?: string | null;
   brand: string;
 }
 export type UpdateDockRequest = CreateDockRequest;
 
 export interface CreateKeyboardMouseSetRequest {
+  serialNumber?: string | null;
   brand: string;
   connectionType: ConnectionType;
 }
 export type UpdateKeyboardMouseSetRequest = CreateKeyboardMouseSetRequest;
+
+export interface CreateHeadsetRequest {
+  serialNumber?: string | null;
+  brand: string;
+  connectionType: ConnectionType;
+}
+export type UpdateHeadsetRequest = CreateHeadsetRequest;
 
 export interface CreateStorageRequest {
   serialNumber: string;

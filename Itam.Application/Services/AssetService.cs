@@ -73,6 +73,7 @@ public sealed class AssetService : IAssetService
     {
         var monitor = new Monitor
         {
+            SerialNumber = NormalizeSerial(request.SerialNumber),
             Brand = request.Brand,
             Resolution = request.Resolution,
             RefreshRate = request.RefreshRate,
@@ -81,7 +82,7 @@ public sealed class AssetService : IAssetService
         };
 
         _dbContext.Monitors.Add(monitor);
-        await _dbContext.SaveChangesAsync(ct);
+        await SaveWithSerialGuardAsync(ct);
         _logger.LogInformation("Monitor {AssetId} created.", monitor.Id);
 
         return await GetDetailsAsync(monitor.Id, ct);
@@ -89,10 +90,15 @@ public sealed class AssetService : IAssetService
 
     public async Task<AssetDetailsDto> CreateDockAsync(CreateDockRequestDto request, CancellationToken ct = default)
     {
-        var dock = new Dock { Brand = request.Brand, Status = AssetStatus.Available };
+        var dock = new Dock
+        {
+            SerialNumber = NormalizeSerial(request.SerialNumber),
+            Brand = request.Brand,
+            Status = AssetStatus.Available
+        };
 
         _dbContext.Docks.Add(dock);
-        await _dbContext.SaveChangesAsync(ct);
+        await SaveWithSerialGuardAsync(ct);
         _logger.LogInformation("Dock {AssetId} created.", dock.Id);
 
         return await GetDetailsAsync(dock.Id, ct);
@@ -102,16 +108,34 @@ public sealed class AssetService : IAssetService
     {
         var set = new KeyboardMouseSet
         {
+            SerialNumber = NormalizeSerial(request.SerialNumber),
             Brand = request.Brand,
             ConnectionType = request.ConnectionType,
             Status = AssetStatus.Available
         };
 
         _dbContext.KeyboardMouseSets.Add(set);
-        await _dbContext.SaveChangesAsync(ct);
+        await SaveWithSerialGuardAsync(ct);
         _logger.LogInformation("KeyboardMouseSet {AssetId} created.", set.Id);
 
         return await GetDetailsAsync(set.Id, ct);
+    }
+
+    public async Task<AssetDetailsDto> CreateHeadsetAsync(CreateHeadsetRequestDto request, CancellationToken ct = default)
+    {
+        var headset = new Headset
+        {
+            SerialNumber = NormalizeSerial(request.SerialNumber),
+            Brand = request.Brand,
+            ConnectionType = request.ConnectionType,
+            Status = AssetStatus.Available
+        };
+
+        _dbContext.Headsets.Add(headset);
+        await SaveWithSerialGuardAsync(ct);
+        _logger.LogInformation("Headset {AssetId} created.", headset.Id);
+
+        return await GetDetailsAsync(headset.Id, ct);
     }
 
     public async Task<AssetDetailsDto> UpdateLaptopAsync(Guid id, UpdateLaptopRequestDto request, CancellationToken ct = default)
@@ -155,12 +179,13 @@ public sealed class AssetService : IAssetService
         var monitor = await _dbContext.Monitors.SingleOrDefaultAsync(m => m.Id == id, ct)
             ?? throw new EntityNotFoundException(nameof(Monitor), id);
 
+        monitor.SerialNumber = NormalizeSerial(request.SerialNumber);
         monitor.Brand = request.Brand;
         monitor.Resolution = request.Resolution;
         monitor.RefreshRate = request.RefreshRate;
         monitor.Size = request.Size;
 
-        await _dbContext.SaveChangesAsync(ct);
+        await SaveWithSerialGuardAsync(ct);
         return await GetDetailsAsync(id, ct);
     }
 
@@ -169,9 +194,10 @@ public sealed class AssetService : IAssetService
         var dock = await _dbContext.Docks.SingleOrDefaultAsync(d => d.Id == id, ct)
             ?? throw new EntityNotFoundException(nameof(Dock), id);
 
+        dock.SerialNumber = NormalizeSerial(request.SerialNumber);
         dock.Brand = request.Brand;
 
-        await _dbContext.SaveChangesAsync(ct);
+        await SaveWithSerialGuardAsync(ct);
         return await GetDetailsAsync(id, ct);
     }
 
@@ -180,10 +206,24 @@ public sealed class AssetService : IAssetService
         var set = await _dbContext.KeyboardMouseSets.SingleOrDefaultAsync(k => k.Id == id, ct)
             ?? throw new EntityNotFoundException(nameof(KeyboardMouseSet), id);
 
+        set.SerialNumber = NormalizeSerial(request.SerialNumber);
         set.Brand = request.Brand;
         set.ConnectionType = request.ConnectionType;
 
-        await _dbContext.SaveChangesAsync(ct);
+        await SaveWithSerialGuardAsync(ct);
+        return await GetDetailsAsync(id, ct);
+    }
+
+    public async Task<AssetDetailsDto> UpdateHeadsetAsync(Guid id, UpdateHeadsetRequestDto request, CancellationToken ct = default)
+    {
+        var headset = await _dbContext.Headsets.SingleOrDefaultAsync(h => h.Id == id, ct)
+            ?? throw new EntityNotFoundException(nameof(Headset), id);
+
+        headset.SerialNumber = NormalizeSerial(request.SerialNumber);
+        headset.Brand = request.Brand;
+        headset.ConnectionType = request.ConnectionType;
+
+        await SaveWithSerialGuardAsync(ct);
         return await GetDetailsAsync(id, ct);
     }
 
@@ -266,9 +306,18 @@ public sealed class AssetService : IAssetService
                     (((DesktopPc)a).SerialNumber.ToLower().Contains(term)
                      || ((DesktopPc)a).Brand.ToLower().Contains(term)
                      || ((DesktopPc)a).Model.ToLower().Contains(term)))
-                || (a is Monitor && ((Monitor)a).Brand.ToLower().Contains(term))
-                || (a is Dock && ((Dock)a).Brand.ToLower().Contains(term))
-                || (a is KeyboardMouseSet && ((KeyboardMouseSet)a).Brand.ToLower().Contains(term)));
+                || (a is Monitor &&
+                    (((Monitor)a).Brand.ToLower().Contains(term)
+                     || (((Monitor)a).SerialNumber != null && ((Monitor)a).SerialNumber!.ToLower().Contains(term))))
+                || (a is Dock &&
+                    (((Dock)a).Brand.ToLower().Contains(term)
+                     || (((Dock)a).SerialNumber != null && ((Dock)a).SerialNumber!.ToLower().Contains(term))))
+                || (a is KeyboardMouseSet &&
+                    (((KeyboardMouseSet)a).Brand.ToLower().Contains(term)
+                     || (((KeyboardMouseSet)a).SerialNumber != null && ((KeyboardMouseSet)a).SerialNumber!.ToLower().Contains(term))))
+                || (a is Headset &&
+                    (((Headset)a).Brand.ToLower().Contains(term)
+                     || (((Headset)a).SerialNumber != null && ((Headset)a).SerialNumber!.ToLower().Contains(term)))));
         }
 
         var totalCount = await assets.CountAsync(ct);
@@ -525,13 +574,15 @@ public sealed class AssetService : IAssetService
             },
             Monitor m => dto with
             {
+                SerialNumber = m.SerialNumber,
                 Brand = m.Brand,
                 Resolution = m.Resolution,
                 RefreshRate = m.RefreshRate,
                 Size = m.Size
             },
-            Dock d => dto with { Brand = d.Brand },
-            KeyboardMouseSet k => dto with { Brand = k.Brand, ConnectionType = k.ConnectionType },
+            Dock d => dto with { SerialNumber = d.SerialNumber, Brand = d.Brand },
+            KeyboardMouseSet k => dto with { SerialNumber = k.SerialNumber, Brand = k.Brand, ConnectionType = k.ConnectionType },
+            Headset h => dto with { SerialNumber = h.SerialNumber, Brand = h.Brand, ConnectionType = h.ConnectionType },
             _ => dto
         };
     }
@@ -542,9 +593,10 @@ public sealed class AssetService : IAssetService
         {
             Laptop l => (l.Brand, l.Model, l.SerialNumber),
             DesktopPc p => (p.Brand, p.Model, p.SerialNumber),
-            Monitor m => (m.Brand, m.Resolution, (string?)null),
-            Dock d => (d.Brand, (string?)null, (string?)null),
-            KeyboardMouseSet k => (k.Brand, (string?)null, (string?)null),
+            Monitor m => (m.Brand, m.Resolution, m.SerialNumber),
+            Dock d => (d.Brand, (string?)null, d.SerialNumber),
+            KeyboardMouseSet k => (k.Brand, (string?)null, k.SerialNumber),
+            Headset h => (h.Brand, (string?)null, h.SerialNumber),
             _ => ((string?)null, (string?)null, (string?)null)
         };
 
@@ -568,6 +620,12 @@ public sealed class AssetService : IAssetService
             throw new EntityNotFoundException(nameof(DesktopPc), desktopPcId.Value);
         }
     }
+
+    // Collapses a blank/whitespace-only optional serial number to null so it's excluded by the
+    // filtered unique index (multiple assets with "no serial" shouldn't collide with each other
+    // or with a literal empty string), and so it renders as "not set" rather than a blank value.
+    private static string? NormalizeSerial(string? serialNumber) =>
+        string.IsNullOrWhiteSpace(serialNumber) ? null : serialNumber.Trim();
 
     private async Task SaveWithSerialGuardAsync(CancellationToken ct)
     {

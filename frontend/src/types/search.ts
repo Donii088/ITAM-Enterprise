@@ -4,6 +4,8 @@ export interface SearchItem {
   title: string;
   subtitle: string | null;
   status: string | null;
+  priority: string | null;
+  createdAt: string;
 }
 
 export interface SearchResults {

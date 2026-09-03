@@ -20,6 +20,7 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Monitor> Monitors => Set<Monitor>();
     public DbSet<Dock> Docks => Set<Dock>();
     public DbSet<KeyboardMouseSet> KeyboardMouseSets => Set<KeyboardMouseSet>();
+    public DbSet<Headset> Headsets => Set<Headset>();
 
     public DbSet<Storage> StorageDevices => Set<Storage>();
     public DbSet<AssetAssignment> AssetAssignments => Set<AssetAssignment>();
