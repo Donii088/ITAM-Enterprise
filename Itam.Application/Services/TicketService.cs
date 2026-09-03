@@ -136,9 +136,10 @@ public sealed class TicketService : ITicketService
             var userId = _currentUserService.UserId
                 ?? throw new UnauthorizedException("You must be authenticated.");
 
-            if (ticket.EmployeeId != userId)
+            if (userId != ticket.EmployeeId)
             {
-                throw new ForbiddenException("Only the ticket's owner can cancel it.");
+                throw new BusinessRuleViolationException(
+                    "Only the ticket's owner can cancel it.");
             }
         }
 
