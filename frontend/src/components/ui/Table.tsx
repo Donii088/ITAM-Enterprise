@@ -1,10 +1,20 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-export function TableContainer({ className, children }: { className?: string; children: React.ReactNode }) {
+export function TableContainer({
+  className,
+  /** Defaults to the historical 640px floor; pass a narrower (or no) minimum for tables whose
+      columns have been trimmed/combined enough to comfortably reflow without horizontal scroll. */
+  minWidthClassName = 'min-w-[640px]',
+  children,
+}: {
+  className?: string;
+  minWidthClassName?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className={cn('w-full overflow-x-auto scrollbar-thin', className)}>
-      <table className="w-full min-w-[640px] border-collapse text-sm">{children}</table>
+      <table className={cn('w-full border-collapse text-sm', minWidthClassName)}>{children}</table>
     </div>
   );
 }
