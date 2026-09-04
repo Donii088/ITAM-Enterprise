@@ -116,7 +116,7 @@ export default function AssignmentsListPage() {
                 {data?.items.map((assignment) => (
                   <TableRow key={assignment.id}>
                     <TableTd className="font-medium">
-                      <Link to={routes.assets.detail(assignment.assetId)} className="hover:text-primary-600 hover:underline">
+                      <Link to={routes.assets.detail(assignment.assetId)} className="transition-colors hover:text-primary-600 hover:underline">
                         {assignment.assetBrand ?? ''} {assignment.assetModel ?? assignment.assetSerial ?? ASSET_TYPE_LABELS[assignment.assetType]}
                       </Link>
                     </TableTd>

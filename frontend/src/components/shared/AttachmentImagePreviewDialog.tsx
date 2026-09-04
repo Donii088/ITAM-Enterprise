@@ -42,7 +42,7 @@ export function AttachmentImagePreviewDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex min-h-[16rem] items-center justify-center overflow-hidden rounded-lg bg-muted/50">
+        <div className="flex min-h-[16rem] items-center justify-center overflow-hidden rounded-xl bg-muted/50 ring-1 ring-inset ring-border">
           {isPending && <Spinner size={32} />}
           {isError && (
             <div className="flex flex-col items-center gap-3 p-8 text-center">

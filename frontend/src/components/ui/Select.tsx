@@ -15,8 +15,8 @@ export const SelectTrigger = React.forwardRef<
     ref={ref}
     aria-invalid={invalid}
     className={cn(
-      'focus-ring flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground data-[placeholder]:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
-      invalid && 'border-danger focus-visible:ring-danger',
+      'focus-ring flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground shadow-xs transition-colors data-[placeholder]:text-muted-foreground hover:border-muted-foreground/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
+      invalid && 'border-danger hover:border-danger focus-visible:ring-danger',
       className,
     )}
     {...props}
@@ -38,7 +38,7 @@ export const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        'relative z-50 max-h-[--radix-select-content-available-height] min-w-[8rem] overflow-hidden rounded-lg border border-border bg-surface shadow-card animate-fade-in',
+        'relative z-50 max-h-[--radix-select-content-available-height] min-w-[8rem] overflow-hidden rounded-lg border border-border bg-surface-raised shadow-popover animate-scale-in',
         position === 'popper' && 'w-[--radix-select-trigger-width]',
         className,
       )}
@@ -57,7 +57,7 @@ export const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'focus-ring relative flex w-full cursor-pointer select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-foreground outline-none data-[highlighted]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'focus-ring relative flex w-full cursor-pointer select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-foreground outline-none transition-colors data-[highlighted]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     {...props}

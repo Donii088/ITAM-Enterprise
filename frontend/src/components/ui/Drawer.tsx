@@ -13,12 +13,12 @@ export interface DrawerContentProps extends React.ComponentPropsWithoutRef<typeo
 export const DrawerContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DrawerContentProps>(
   ({ className, children, side = 'left', ...props }, ref) => (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[1px] animate-fade-in" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm animate-fade-in" />
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          'fixed inset-y-0 z-50 flex w-72 max-w-[85vw] flex-col bg-surface shadow-card focus:outline-none',
-          side === 'left' ? 'left-0 animate-slide-in-left' : 'right-0 animate-slide-in-right',
+          'fixed inset-y-0 z-50 flex w-72 max-w-[85vw] flex-col bg-surface-raised shadow-elevated focus:outline-none',
+          side === 'left' ? 'left-0 border-r border-border animate-slide-in-left' : 'right-0 border-l border-border animate-slide-in-right',
           className,
         )}
         {...props}

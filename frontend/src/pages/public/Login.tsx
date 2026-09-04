@@ -87,7 +87,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                className="focus-ring rounded p-1 text-muted-foreground hover:text-foreground"
+                className="focus-ring rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

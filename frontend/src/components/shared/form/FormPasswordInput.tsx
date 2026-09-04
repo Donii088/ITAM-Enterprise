@@ -38,7 +38,7 @@ export function FormPasswordInput<TFieldValues extends FieldValues>({
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          className="focus-ring rounded p-1 text-muted-foreground hover:text-foreground"
+          className="focus-ring rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
           aria-label={visible ? 'Hide password' : 'Show password'}
         >
           {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

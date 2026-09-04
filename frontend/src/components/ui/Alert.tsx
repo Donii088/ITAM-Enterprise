@@ -19,10 +19,10 @@ export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
 export function Alert({ variant = 'info', title, className, children, ...props }: AlertProps) {
   const { icon: Icon, classes } = variantConfig[variant];
   return (
-    <div role="alert" className={cn('flex gap-3 rounded-lg border p-3.5 text-sm', classes, className)} {...props}>
+    <div role="alert" className={cn('flex gap-3 rounded-lg border p-3.5 text-sm shadow-xs', classes, className)} {...props}>
       <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
       <div className="min-w-0">
-        {title && <p className="mb-0.5 font-medium">{title}</p>}
+        {title && <p className="mb-0.5 font-semibold tracking-tight">{title}</p>}
         {children && <div className="text-sm opacity-90">{children}</div>}
       </div>
     </div>

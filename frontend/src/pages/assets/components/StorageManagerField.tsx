@@ -91,7 +91,7 @@ export function StorageManagerField({
           {attached.map((storage) => (
             <li
               key={storage.id}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2"
+              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2 transition-colors hover:bg-muted/60"
             >
               <span className="text-sm text-foreground">{storageLabel(storage)}</span>
               <Button

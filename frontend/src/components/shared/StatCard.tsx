@@ -29,7 +29,7 @@ export function StatCard({ label, value, icon: Icon, accent = 'primary', trend, 
       <CardContent className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">{value}</p>
+          <p className="mt-1.5 text-[1.75rem] font-bold leading-tight tracking-tight text-foreground">{value}</p>
           {trend && (
             <p
               className={cn(
@@ -42,7 +42,7 @@ export function StatCard({ label, value, icon: Icon, accent = 'primary', trend, 
             </p>
           )}
         </div>
-        <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', accentClasses[accent])}>
+        <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', accentClasses[accent])}>
           <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
       </CardContent>

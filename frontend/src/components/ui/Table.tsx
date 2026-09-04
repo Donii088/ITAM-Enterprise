@@ -12,7 +12,7 @@ export function TableContainer({ className, children }: { className?: string; ch
 export function TableHead({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <thead
-      className={cn('sticky top-0 z-10 border-b border-border bg-surface text-left', className)}
+      className={cn('sticky top-0 z-10 border-b border-border bg-surface/95 text-left backdrop-blur supports-[backdrop-filter]:bg-surface/85', className)}
       {...props}
     />
   );
@@ -26,19 +26,19 @@ export function TableRow({
   className,
   ...props
 }: React.HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn('transition-colors hover:bg-muted/50', className)} {...props} />;
+  return <tr className={cn('transition-colors hover:bg-muted/40', className)} {...props} />;
 }
 
 export function TableTh({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
       scope="col"
-      className={cn('whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground', className)}
+      className={cn('whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground', className)}
       {...props}
     />
   );
 }
 
 export function TableTd({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn('whitespace-nowrap px-4 py-3 text-foreground', className)} {...props} />;
+  return <td className={cn('whitespace-nowrap px-4 py-3.5 text-foreground', className)} {...props} />;
 }

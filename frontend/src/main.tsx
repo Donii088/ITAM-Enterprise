@@ -22,7 +22,18 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
             (e.g. "Export CSV", "Add asset") in the top-right corner, which a top-right toast
             would sit on top of. Bottom-right never collides with in-page content.
           */}
-          <Toaster richColors closeButton position="bottom-right" />
+          <Toaster
+            richColors
+            closeButton
+            position="bottom-right"
+            toastOptions={{
+              classNames: {
+                toast: 'rounded-xl border shadow-elevated font-sans',
+                title: 'font-semibold tracking-tight',
+                description: 'text-sm opacity-90',
+              },
+            }}
+          />
         </TooltipProvider>
       </QueryClientProvider>
     </BrowserRouter>

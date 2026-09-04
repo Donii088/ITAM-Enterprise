@@ -23,7 +23,7 @@ export function GlobalSearchBox() {
         placeholder="Search assets, users, tickets…"
         leftIcon={<Search className="h-4 w-4" />}
         aria-label="Global search"
-        className="bg-muted/60"
+        className="border-transparent bg-muted/60 shadow-none hover:border-transparent focus-visible:border-border focus-visible:bg-surface"
       />
     </form>
   );
