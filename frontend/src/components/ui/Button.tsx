@@ -14,12 +14,12 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-primary-600 text-white hover:bg-primary-700 shadow-soft',
+  primary: 'bg-primary-600 text-white hover:bg-primary-700 shadow-soft hover:shadow-glow-primary',
   secondary: 'bg-muted text-foreground hover:bg-muted/70',
-  outline: 'border border-border bg-transparent hover:bg-muted text-foreground',
+  outline: 'border border-border bg-surface hover:bg-muted text-foreground shadow-xs',
   ghost: 'bg-transparent hover:bg-muted text-foreground',
   danger: 'bg-danger text-white hover:bg-rose-700 shadow-soft',
-  link: 'bg-transparent text-primary-600 hover:underline p-0 h-auto',
+  link: 'bg-transparent text-primary-600 hover:text-primary-700 hover:underline underline-offset-4 p-0 h-auto',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -38,7 +38,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'focus-ring inline-flex items-center justify-center rounded-lg font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 whitespace-nowrap',
+          'focus-ring inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out disabled:pointer-events-none disabled:opacity-50 whitespace-nowrap active:scale-[0.98]',
           variantClasses[variant],
           variant !== 'link' && sizeClasses[size],
           className,

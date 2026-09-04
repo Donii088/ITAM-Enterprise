@@ -26,7 +26,7 @@ import { formatNumber } from '@/lib/formatters';
 import { routes } from '@/routes/routes';
 import { ASSET_TYPE_LABELS, type AssetType } from '@/types';
 
-const CHART_COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#e11d48', '#3b82f6', '#8b5cf6'];
+const CHART_COLORS = ['#4f46e5', '#059669', '#d97706', '#e11d48', '#2563eb', '#7c3aed'];
 
 export function AdminDashboard() {
   const { data, isLoading, isError, error, refetch } = useDashboardOverview();
@@ -80,7 +80,7 @@ export function AdminDashboard() {
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                   <RechartsTooltip
-                    contentStyle={{ borderRadius: 8, border: '1px solid rgb(var(--color-border))', fontSize: 13 }}
+                    contentStyle={{ borderRadius: 10, border: '1px solid rgb(var(--color-border))', backgroundColor: 'rgb(var(--color-surface-raised))', boxShadow: '0 4px 10px -2px rgb(15 23 42 / 0.08), 0 10px 24px -6px rgb(15 23 42 / 0.10)', fontSize: 13 }}
                   />
                   <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="#4f46e5" />
                 </BarChart>
@@ -106,7 +106,7 @@ export function AdminDashboard() {
                   </Pie>
                   <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                   <RechartsTooltip
-                    contentStyle={{ borderRadius: 8, border: '1px solid rgb(var(--color-border))', fontSize: 13 }}
+                    contentStyle={{ borderRadius: 10, border: '1px solid rgb(var(--color-border))', backgroundColor: 'rgb(var(--color-surface-raised))', boxShadow: '0 4px 10px -2px rgb(15 23 42 / 0.08), 0 10px 24px -6px rgb(15 23 42 / 0.10)', fontSize: 13 }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -119,9 +119,9 @@ export function AdminDashboard() {
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                   <RechartsTooltip
-                    contentStyle={{ borderRadius: 8, border: '1px solid rgb(var(--color-border))', fontSize: 13 }}
+                    contentStyle={{ borderRadius: 10, border: '1px solid rgb(var(--color-border))', backgroundColor: 'rgb(var(--color-surface-raised))', boxShadow: '0 4px 10px -2px rgb(15 23 42 / 0.08), 0 10px 24px -6px rgb(15 23 42 / 0.10)', fontSize: 13 }}
                   />
-                  <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="#f59e0b" />
+                  <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="#d97706" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -144,7 +144,7 @@ export function AdminDashboard() {
                   </Pie>
                   <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                   <RechartsTooltip
-                    contentStyle={{ borderRadius: 8, border: '1px solid rgb(var(--color-border))', fontSize: 13 }}
+                    contentStyle={{ borderRadius: 10, border: '1px solid rgb(var(--color-border))', backgroundColor: 'rgb(var(--color-surface-raised))', boxShadow: '0 4px 10px -2px rgb(15 23 42 / 0.08), 0 10px 24px -6px rgb(15 23 42 / 0.10)', fontSize: 13 }}
                   />
                 </PieChart>
               </ResponsiveContainer>

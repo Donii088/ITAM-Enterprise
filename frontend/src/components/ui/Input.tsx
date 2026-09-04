@@ -22,10 +22,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             aria-invalid={invalid}
             className={cn(
-              'focus-ring flex h-10 w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+              'focus-ring flex h-10 w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground shadow-xs transition-colors placeholder:text-muted-foreground hover:border-muted-foreground/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
               leftIcon && 'pl-9',
               rightElement && 'pr-9',
-              invalid && 'border-danger focus-visible:ring-danger',
+              invalid && 'border-danger hover:border-danger focus-visible:ring-danger',
               className,
             )}
             {...props}
@@ -43,8 +43,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         type={type}
         aria-invalid={invalid}
         className={cn(
-          'focus-ring flex h-10 w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-          invalid && 'border-danger focus-visible:ring-danger',
+          'focus-ring flex h-10 w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground shadow-xs transition-colors placeholder:text-muted-foreground hover:border-muted-foreground/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
+          invalid && 'border-danger hover:border-danger focus-visible:ring-danger',
           className,
         )}
         {...props}

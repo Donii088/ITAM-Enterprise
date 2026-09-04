@@ -79,7 +79,7 @@ export default function RepairsListPage() {
                   <TableRow key={repair.id}>
                     <TableTd className="font-medium">{repair.ticketTitle}</TableTd>
                     <TableTd>
-                      <Link to={routes.assets.detail(repair.assetId)} className="hover:text-primary-600 hover:underline">
+                      <Link to={routes.assets.detail(repair.assetId)} className="transition-colors hover:text-primary-600 hover:underline">
                         {repair.assetBrand ?? ''} {repair.assetModel ?? repair.assetSerial ?? ASSET_TYPE_LABELS[repair.assetType]}
                       </Link>
                     </TableTd>

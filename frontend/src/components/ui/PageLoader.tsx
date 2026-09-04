@@ -10,9 +10,9 @@ export function PageLoader() {
 
 export function SplashLoader() {
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-background">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 shadow-soft">
-        <span className="text-lg font-bold text-white">IT</span>
+    <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 shadow-elevated">
+        <span className="text-lg font-bold tracking-tight text-white">IT</span>
       </div>
       <Spinner size={22} />
     </div>

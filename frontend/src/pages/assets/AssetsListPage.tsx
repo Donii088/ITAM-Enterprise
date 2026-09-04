@@ -200,7 +200,7 @@ function DevicesTab() {
                       onClick={() => navigate(routes.assets.detail(asset.id))}
                     >
                       <TableTd className="font-medium">
-                        <span className="hover:text-primary-600 hover:underline">
+                        <span className="transition-colors hover:text-primary-600 hover:underline">
                           {asset.brand ?? ''} {asset.model ?? ''}
                         </span>
                       </TableTd>
@@ -414,11 +414,11 @@ function StorageTab() {
                     <TableTd>{formatStorageCapacity(storage.capacity, storage.storageUnit)}</TableTd>
                     <TableTd className="text-muted-foreground">
                       {storage.laptopId ? (
-                        <Link to={routes.assets.detail(storage.laptopId)} className="hover:text-primary-600 hover:underline">
+                        <Link to={routes.assets.detail(storage.laptopId)} className="transition-colors hover:text-primary-600 hover:underline">
                           Laptop
                         </Link>
                       ) : storage.desktopPcId ? (
-                        <Link to={routes.assets.detail(storage.desktopPcId)} className="hover:text-primary-600 hover:underline">
+                        <Link to={routes.assets.detail(storage.desktopPcId)} className="transition-colors hover:text-primary-600 hover:underline">
                           Desktop PC
                         </Link>
                       ) : (
