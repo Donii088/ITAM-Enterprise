@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Download, FileText, Image as ImageIcon, Paperclip, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -19,9 +20,9 @@ function AttachmentMeta({ attachment }: { attachment: Attachment }) {
           {attachment.fileExtension}
         </span>
         {attachment.repairHistoryId && (
-          <span className="shrink-0 rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-700">
+          <Badge variant="primary" className="shrink-0 px-2 py-0 text-[10px] uppercase tracking-wide">
             Resolution
-          </span>
+          </Badge>
         )}
       </p>
       <p className="truncate text-xs text-muted-foreground">
@@ -111,7 +112,7 @@ export function AttachmentPanel({
             return (
               <li
                 key={attachment.id}
-                className="flex items-center gap-3 rounded-lg border border-border p-3"
+                className="flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-muted-foreground/30 hover:bg-muted/30"
               >
                 {isImage ? (
                   <button

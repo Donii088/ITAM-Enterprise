@@ -25,7 +25,7 @@ export function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="focus-ring flex items-center gap-2 rounded-lg p-1 pr-2 hover:bg-muted"
+          className="focus-ring flex items-center gap-2 rounded-lg p-1 pr-2 transition-colors hover:bg-muted"
           aria-label="Open user menu"
         >
           <Avatar name={fullName} size="sm" />

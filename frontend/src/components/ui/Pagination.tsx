@@ -29,7 +29,7 @@ export function Pagination({
   const endItem = Math.min(pageNumber * pageSize, totalCount);
 
   return (
-    <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-t border-border bg-muted/30 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="whitespace-nowrap">
           {totalCount === 0 ? 'No results' : `${startItem}–${endItem} of ${totalCount}`}

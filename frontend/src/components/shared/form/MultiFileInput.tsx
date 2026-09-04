@@ -114,7 +114,7 @@ export function MultiFileInput({
       {staged.length > 0 && (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {staged.map(({ id, file, previewUrl }) => (
-            <li key={id} className="group relative overflow-hidden rounded-lg border border-border">
+            <li key={id} className="group relative overflow-hidden rounded-xl border border-border">
               {previewUrl ? (
                 <img src={previewUrl} alt="" className="h-24 w-full object-cover" />
               ) : (
@@ -142,7 +142,7 @@ export function MultiFileInput({
         disabled={disabled || atCapacity}
         onClick={() => inputRef.current?.click()}
         className={cn(
-          'focus-ring flex w-full flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary-400 hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50',
+          'focus-ring flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary-400 hover:bg-primary-50/40 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-primary-500/5',
         )}
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">

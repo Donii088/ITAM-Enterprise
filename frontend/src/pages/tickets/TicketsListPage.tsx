@@ -131,7 +131,7 @@ export default function TicketsListPage() {
                 {data?.items.map((ticket) => (
                   <TableRow key={ticket.id}>
                     <TableTd className="font-medium">
-                      <Link to={routes.tickets.detail(ticket.id)} className="hover:text-primary-600 hover:underline">
+                      <Link to={routes.tickets.detail(ticket.id)} className="transition-colors hover:text-primary-600 hover:underline">
                         {ticket.title}
                       </Link>
                     </TableTd>

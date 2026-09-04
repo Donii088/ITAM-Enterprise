@@ -271,7 +271,7 @@ export default function AssetDetailPage() {
                 {myTickets.items.map((ticket) => (
                   <li key={ticket.id} className="flex items-center justify-between gap-3 py-3">
                     <div className="min-w-0">
-                      <Link to={routes.tickets.detail(ticket.id)} className="truncate text-sm font-medium text-foreground hover:text-primary-600 hover:underline">
+                      <Link to={routes.tickets.detail(ticket.id)} className="truncate text-sm font-medium text-foreground transition-colors hover:text-primary-600 hover:underline">
                         {ticket.title}
                       </Link>
                       <p className="text-xs text-muted-foreground">{formatDate(ticket.createdAt)}</p>

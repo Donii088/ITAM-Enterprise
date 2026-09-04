@@ -12,7 +12,7 @@ export const DialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn('fixed inset-0 z-50 bg-black/50 backdrop-blur-[1px] animate-fade-in', className)}
+    className={cn('fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm animate-fade-in', className)}
     {...props}
   />
 ));
@@ -35,7 +35,7 @@ export const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          'fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border border-border bg-surface p-5 shadow-card focus:outline-none sm:w-full',
+          'fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border border-border bg-surface-raised p-5 shadow-elevated animate-scale-in focus:outline-none sm:w-full sm:p-6',
           'max-h-[90vh] overflow-y-auto',
           sizeClasses,
           className,
@@ -43,7 +43,7 @@ export const DialogContent = React.forwardRef<
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="focus-ring absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+        <DialogPrimitive.Close className="focus-ring absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
@@ -70,7 +70,7 @@ export const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title ref={ref} className={cn('text-lg font-semibold text-foreground', className)} {...props} />
+  <DialogPrimitive.Title ref={ref} className={cn('text-lg font-semibold tracking-tight text-foreground', className)} {...props} />
 ));
 DialogTitle.displayName = 'DialogTitle';
 

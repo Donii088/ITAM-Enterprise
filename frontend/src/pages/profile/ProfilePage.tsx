@@ -139,7 +139,7 @@ export default function ProfilePage() {
         <CardContent className="flex flex-col items-center gap-3 py-8 text-center sm:flex-row sm:text-left">
           <Avatar name={fullName} size="lg" />
           <div className="min-w-0">
-            <p className="truncate text-lg font-semibold text-foreground">{fullName}</p>
+            <p className="truncate text-lg font-semibold tracking-tight text-foreground">{fullName}</p>
             <p className="truncate text-sm text-muted-foreground">{user.jobTitle}</p>
             <Badge variant="primary" className="mt-1.5">
               {ROLE_LABELS[user.role]}
