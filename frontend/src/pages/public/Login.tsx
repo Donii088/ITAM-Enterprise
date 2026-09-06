@@ -52,64 +52,79 @@ export default function Login() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1.5 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Sign in to your account</h1>
-        <p className="text-sm text-muted-foreground">Enter your credentials to access the ITAM workspace.</p>
-      </div>
-
-      {errors.root && (
-        <Alert variant="danger" title="Unable to sign in">
-          {errors.root.message}
-        </Alert>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-        <FormField label="Email address" htmlFor="email" required error={errors.email?.message}>
-          <Input
-            id="email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@company.com"
-            invalid={Boolean(errors.email)}
-            {...register('email')}
-          />
-        </FormField>
-
-        <FormField label="Password" htmlFor="password" required error={errors.password?.message}>
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="current-password"
-            placeholder="••••••••"
-            invalid={Boolean(errors.password)}
-            rightElement={
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="focus-ring rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            }
-            {...register('password')}
-          />
-        </FormField>
-
-        <div className="flex items-center gap-2">
-          <Checkbox id="remember" checked={remember} onCheckedChange={(v) => setRemember(v === true)} />
-          <Label htmlFor="remember" className="cursor-pointer font-normal text-muted-foreground">
-            Keep me signed in on this device
-          </Label>
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-border/70 bg-surface/90 p-7 shadow-elevated backdrop-blur-xl sm:p-9">
+        <div className="mb-7 space-y-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400">
+            Sign in
+          </p>
+          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-foreground">Welcome back</h1>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Enter your credentials to access the ITAM workspace.
+          </p>
         </div>
 
-        <Button type="submit" className="w-full" isLoading={isSubmitting || loginMutation.isPending} leftIcon={<LogIn className="h-4 w-4" />}>
-          Sign in
-        </Button>
-      </form>
+        {errors.root && (
+          <Alert variant="danger" title="Unable to sign in" className="mb-5">
+            {errors.root.message}
+          </Alert>
+        )}
 
-      <p className="text-center text-xs text-muted-foreground">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+          <FormField label="Email address" htmlFor="email" required error={errors.email?.message}>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@company.com"
+              invalid={Boolean(errors.email)}
+              className="h-11"
+              {...register('email')}
+            />
+          </FormField>
+
+          <FormField label="Password" htmlFor="password" required error={errors.password?.message}>
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              invalid={Boolean(errors.password)}
+              className="h-11"
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className="focus-ring rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              }
+              {...register('password')}
+            />
+          </FormField>
+
+          <div className="flex items-center gap-2">
+            <Checkbox id="remember" checked={remember} onCheckedChange={(v) => setRemember(v === true)} />
+            <Label htmlFor="remember" className="cursor-pointer font-normal text-muted-foreground">
+              Keep me signed in on this device
+            </Label>
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            isLoading={isSubmitting || loginMutation.isPending}
+            leftIcon={<LogIn className="h-4 w-4" />}
+          >
+            Sign in
+          </Button>
+        </form>
+      </div>
+
+      <p className="text-center text-xs leading-relaxed text-muted-foreground">
         Don't have an account? New employee accounts are created by your IT administrator from the User
         Management area — there is no self-service sign-up.
       </p>
