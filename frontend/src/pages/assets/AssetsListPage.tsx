@@ -190,7 +190,10 @@ function DevicesTab() {
               </TableHead>
               <TableBody>
                 {data?.items.map((asset) => {
-                  const isAssigned = asset.status === ASSET_STATUS.Assigned && Boolean(asset.assignedEmployeeName);
+                  // Driven purely by whether an active assignment exists, not by the displayed
+                  // status — an asset can carry an active assignment while marked Broken/In
+                  // Repair, and Unassign must stay available to recover it in that case.
+                  const isAssigned = Boolean(asset.assignedEmployeeName);
                   return (
                     <TableRow
                       key={asset.id}

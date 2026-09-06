@@ -109,9 +109,25 @@ public sealed class ExportService : IExportService
             assignments = assignments.Where(a => a.AssetId == query.AssetId.Value);
         }
 
-        if (query.ActiveOnly)
+        if (query.ActiveOnly.HasValue)
         {
-            assignments = assignments.Where(a => a.UnassignedAt == null);
+            assignments = query.ActiveOnly.Value
+                ? assignments.Where(a => a.UnassignedAt == null)
+                : assignments.Where(a => a.UnassignedAt != null);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+        {
+            var term = query.SearchTerm.Trim().ToLower();
+
+            assignments = assignments.Where(a =>
+                (a.Employee != null && (a.Employee.FirstName + " " + a.Employee.LastName).ToLower().Contains(term))
+                || (a.Asset is Laptop && (((Laptop)a.Asset).Brand.ToLower().Contains(term) || ((Laptop)a.Asset).Model.ToLower().Contains(term) || ((Laptop)a.Asset).SerialNumber.ToLower().Contains(term)))
+                || (a.Asset is DesktopPc && (((DesktopPc)a.Asset).Brand.ToLower().Contains(term) || ((DesktopPc)a.Asset).Model.ToLower().Contains(term) || ((DesktopPc)a.Asset).SerialNumber.ToLower().Contains(term)))
+                || (a.Asset is Monitor && (((Monitor)a.Asset).Brand.ToLower().Contains(term) || (((Monitor)a.Asset).SerialNumber != null && ((Monitor)a.Asset).SerialNumber!.ToLower().Contains(term))))
+                || (a.Asset is Dock && (((Dock)a.Asset).Brand.ToLower().Contains(term) || (((Dock)a.Asset).SerialNumber != null && ((Dock)a.Asset).SerialNumber!.ToLower().Contains(term))))
+                || (a.Asset is KeyboardMouseSet && (((KeyboardMouseSet)a.Asset).Brand.ToLower().Contains(term) || (((KeyboardMouseSet)a.Asset).SerialNumber != null && ((KeyboardMouseSet)a.Asset).SerialNumber!.ToLower().Contains(term))))
+                || (a.Asset is Headset && (((Headset)a.Asset).Brand.ToLower().Contains(term) || (((Headset)a.Asset).SerialNumber != null && ((Headset)a.Asset).SerialNumber!.ToLower().Contains(term)))));
         }
 
         var list = await assignments

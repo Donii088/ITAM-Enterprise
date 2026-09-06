@@ -15,17 +15,20 @@ public sealed class AssetService : IAssetService
     private readonly IApplicationDbContext _dbContext;
     private readonly IFileStorageService _fileStorage;
     private readonly ICurrentUserService _currentUserService;
+    private readonly TimeProvider _timeProvider;
     private readonly ILogger<AssetService> _logger;
 
     public AssetService(
         IApplicationDbContext dbContext,
         IFileStorageService fileStorage,
         ICurrentUserService currentUserService,
+        TimeProvider timeProvider,
         ILogger<AssetService> logger)
     {
         _dbContext = dbContext;
         _fileStorage = fileStorage;
         _currentUserService = currentUserService;
+        _timeProvider = timeProvider;
         _logger = logger;
     }
 
@@ -350,10 +353,19 @@ public sealed class AssetService : IAssetService
                 "Assets cannot be manually set to Assigned. Use the assignment endpoint instead.");
         }
 
-        if (request.Status == AssetStatus.Available && asset.AssetAssignments.Any())
+        // Every other status (Available, InRepair, Broken) describes an asset that is not, right
+        // now, in an employee's hands — so moving to any of them closes out whatever active
+        // assignment still exists first. This is what keeps Status and the assignment table from
+        // drifting apart: previously, flipping an assigned asset straight to Broken/InRepair left
+        // the assignment open underneath, which then made Available permanently unreachable
+        // ("still assigned" business-rule error) even after the asset came back or was fixed.
+        var activeAssignment = asset.AssetAssignments.SingleOrDefault(a => a.UnassignedAt == null);
+        if (activeAssignment != null)
         {
-            throw new BusinessRuleViolationException(
-                "Asset is currently assigned to an employee. Unassign it before marking it Available.");
+            activeAssignment.UnassignedAt = _timeProvider.GetUtcNow().UtcDateTime;
+            _logger.LogInformation(
+                "Asset {AssetId} status change to {Status} auto-closed active assignment {AssignmentId} (employee {EmployeeId}).",
+                id, request.Status, activeAssignment.Id, activeAssignment.EmployeeId);
         }
 
         asset.Status = request.Status;

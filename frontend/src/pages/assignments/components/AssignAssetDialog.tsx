@@ -17,9 +17,18 @@ const assignSchema = z.object({
 });
 type AssignFormValues = z.infer<typeof assignSchema>;
 
-export function AssignAssetDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export interface AssignAssetDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Pre-fills the asset search box, e.g. with a returned asset's serial when re-assigning it. */
+  initialAssetSearchTerm?: string;
+  /** Pre-selects an employee, e.g. the previous holder when re-assigning from history. */
+  initialEmployeeId?: string;
+}
+
+export function AssignAssetDialog({ open, onOpenChange, initialAssetSearchTerm, initialEmployeeId }: AssignAssetDialogProps) {
   const assignAsset = useAssignAsset();
-  const [assetSearchTerm, setAssetSearchTerm] = React.useState('');
+  const [assetSearchTerm, setAssetSearchTerm] = React.useState(initialAssetSearchTerm ?? '');
   // Matches by brand, model, and — importantly — serial number (server-side, so it also covers
   // assets not among the first page of results), since assets commonly share the same
   // brand/model and serial is often the only way to tell them apart when assigning.
@@ -32,8 +41,18 @@ export function AssignAssetDialog({ open, onOpenChange }: { open: boolean; onOpe
 
   const { control, handleSubmit, reset, formState } = useForm<AssignFormValues>({
     resolver: zodResolver(assignSchema),
-    defaultValues: { assetId: '', employeeId: '' },
+    defaultValues: { assetId: '', employeeId: initialEmployeeId ?? '' },
   });
+
+  // Re-seed on every open so re-opening the dialog for a different "Re-assign" row (while it
+  // stays mounted) doesn't carry over the previous row's prefilled search term or employee.
+  React.useEffect(() => {
+    if (open) {
+      setAssetSearchTerm(initialAssetSearchTerm ?? '');
+      reset({ assetId: '', employeeId: initialEmployeeId ?? '' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialAssetSearchTerm, initialEmployeeId]);
 
   const assetOptions =
     availableAssets?.items.map((a) => ({
@@ -45,7 +64,8 @@ export function AssignAssetDialog({ open, onOpenChange }: { open: boolean; onOpe
 
   function onSubmit(values: AssignFormValues) {
     assignAsset.mutateAsync(values).then(() => {
-      reset();
+      reset({ assetId: '', employeeId: '' });
+      setAssetSearchTerm('');
       onOpenChange(false);
     }).catch(() => undefined);
   }

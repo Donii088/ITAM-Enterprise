@@ -24,4 +24,5 @@ export interface GetAssignmentsQuery extends PagedQuery {
   employeeId?: string;
   assetId?: string;
   activeOnly?: boolean;
+  searchTerm?: string;
 }

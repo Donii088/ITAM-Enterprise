@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LogOut, Settings, UserCircle } from 'lucide-react';
+import { LogOut, UserCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,11 +44,6 @@ export function UserMenu() {
         <DropdownMenuItem asChild>
           <Link to={routes.profile}>
             <UserCircle className="h-4 w-4" /> Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to={routes.profile}>
-            <Settings className="h-4 w-4" /> Account settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
