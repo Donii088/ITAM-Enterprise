@@ -165,7 +165,7 @@ function DevicesTab() {
 
       <Card>
         {isLoading ? (
-          <TableSkeleton rows={8} cols={6} />
+          <TableSkeleton rows={8} cols={5} />
         ) : isError ? (
           <ErrorState error={error} onRetry={() => refetch()} />
         ) : data && data.items.length === 0 ? (
@@ -178,15 +178,13 @@ function DevicesTab() {
           />
         ) : (
           <>
-            <TableContainer>
+            <TableContainer minWidthClassName="min-w-0" className="[&_td]:px-2.5 [&_th]:px-2.5 sm:[&_td]:px-4 sm:[&_th]:px-4">
               <TableHead>
                 <TableRow>
                   <TableTh>Asset</TableTh>
-                  <TableTh>Type</TableTh>
-                  <TableTh>Serial</TableTh>
                   <TableTh>Status</TableTh>
-                  <TableTh>Assigned to</TableTh>
-                  <TableTh>Created</TableTh>
+                  <TableTh className="hidden sm:table-cell">Assigned to</TableTh>
+                  <TableTh className="hidden md:table-cell">Created</TableTh>
                   <TableTh className="text-right">Actions</TableTh>
                 </TableRow>
               </TableHead>
@@ -199,16 +197,26 @@ function DevicesTab() {
                       className="cursor-pointer"
                       onClick={() => navigate(routes.assets.detail(asset.id))}
                     >
-                      <TableTd className="font-medium">
-                        <span className="transition-colors hover:text-primary-600 hover:underline">
+                      <TableTd className="whitespace-normal break-words">
+                        <span className="font-medium text-foreground transition-colors hover:text-primary-600 hover:underline">
                           {asset.brand ?? ''} {asset.model ?? ''}
                         </span>
+                        <p className="text-xs text-muted-foreground">
+                          {ASSET_TYPE_LABELS[asset.assetType]}
+                          {asset.serialNumber ? ` · ${asset.serialNumber}` : ''}
+                        </p>
+                        {/* Assigned-to and created-date move here on narrow screens, where they
+                            don't get their own column — still fully visible, just relocated. */}
+                        <p className="text-xs text-muted-foreground sm:hidden">
+                          {asset.assignedEmployeeName ?? 'Unassigned'} · {formatDate(asset.createdAt)}
+                        </p>
+                        <p className="text-xs text-muted-foreground max-sm:hidden md:hidden">
+                          Created {formatDate(asset.createdAt)}
+                        </p>
                       </TableTd>
-                      <TableTd>{ASSET_TYPE_LABELS[asset.assetType]}</TableTd>
-                      <TableTd className="text-muted-foreground">{asset.serialNumber ?? '—'}</TableTd>
                       <TableTd><AssetStatusBadge status={asset.status} /></TableTd>
-                      <TableTd className="text-muted-foreground">{asset.assignedEmployeeName ?? '—'}</TableTd>
-                      <TableTd className="text-muted-foreground">{formatDate(asset.createdAt)}</TableTd>
+                      <TableTd className="hidden text-muted-foreground sm:table-cell">{asset.assignedEmployeeName ?? '—'}</TableTd>
+                      <TableTd className="hidden text-muted-foreground md:table-cell">{formatDate(asset.createdAt)}</TableTd>
                       <TableTd className="text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -389,69 +397,73 @@ function StorageTab() {
 
       <Card>
         {isLoading ? (
-          <TableSkeleton rows={6} cols={5} />
+          <TableSkeleton rows={6} cols={3} />
         ) : isError ? (
           <ErrorState error={error} onRetry={() => refetch()} />
         ) : data && data.items.length === 0 ? (
           <EmptyState icon={Boxes} title="No storage devices found" />
         ) : (
           <>
-            <TableContainer>
+            <TableContainer minWidthClassName="min-w-0" className="[&_td]:px-2.5 [&_th]:px-2.5 sm:[&_td]:px-4 sm:[&_th]:px-4">
               <TableHead>
                 <TableRow>
-                  <TableTh>Serial number</TableTh>
-                  <TableTh>Type</TableTh>
-                  <TableTh>Capacity</TableTh>
-                  <TableTh>Attached to</TableTh>
+                  <TableTh>Storage device</TableTh>
+                  <TableTh className="hidden sm:table-cell">Attached to</TableTh>
                   <TableTh className="text-right">Actions</TableTh>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data?.items.map((storage) => (
-                  <TableRow key={storage.id}>
-                    <TableTd className="font-medium">{storage.serialNumber}</TableTd>
-                    <TableTd>{storage.storageType}</TableTd>
-                    <TableTd>{formatStorageCapacity(storage.capacity, storage.storageUnit)}</TableTd>
-                    <TableTd className="text-muted-foreground">
-                      {storage.laptopId ? (
-                        <Link to={routes.assets.detail(storage.laptopId)} className="transition-colors hover:text-primary-600 hover:underline">
-                          Laptop
-                        </Link>
-                      ) : storage.desktopPcId ? (
-                        <Link to={routes.assets.detail(storage.desktopPcId)} className="transition-colors hover:text-primary-600 hover:underline">
-                          Desktop PC
-                        </Link>
-                      ) : (
-                        'Unassigned'
-                      )}
-                    </TableTd>
-                    <TableTd className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => {
-                            setEditingStorage(storage);
-                            setFormOpen(true);
-                          }}
-                          aria-label="Edit storage device"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-danger hover:bg-danger/10"
-                          onClick={() => setDeleteTarget(storage)}
-                          aria-label="Delete storage device"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableTd>
-                  </TableRow>
-                ))}
+                {data?.items.map((storage) => {
+                  const attachedTo = storage.laptopId ? (
+                    <Link to={routes.assets.detail(storage.laptopId)} className="transition-colors hover:text-primary-600 hover:underline">
+                      Laptop
+                    </Link>
+                  ) : storage.desktopPcId ? (
+                    <Link to={routes.assets.detail(storage.desktopPcId)} className="transition-colors hover:text-primary-600 hover:underline">
+                      Desktop PC
+                    </Link>
+                  ) : (
+                    'Unassigned'
+                  );
+
+                  return (
+                    <TableRow key={storage.id}>
+                      <TableTd className="whitespace-normal break-words">
+                        <span className="font-medium text-foreground">{storage.serialNumber}</span>
+                        <p className="text-xs text-muted-foreground">
+                          {storage.storageType} · {formatStorageCapacity(storage.capacity, storage.storageUnit)}
+                        </p>
+                        <p className="text-xs text-muted-foreground sm:hidden">{attachedTo}</p>
+                      </TableTd>
+                      <TableTd className="hidden text-muted-foreground sm:table-cell">{attachedTo}</TableTd>
+                      <TableTd className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => {
+                              setEditingStorage(storage);
+                              setFormOpen(true);
+                            }}
+                            aria-label="Edit storage device"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-danger hover:bg-danger/10"
+                            onClick={() => setDeleteTarget(storage)}
+                            aria-label="Delete storage device"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableTd>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </TableContainer>
             {data && (
