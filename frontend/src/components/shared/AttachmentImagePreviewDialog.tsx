@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Download, ImageOff } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatDateTime, formatFileSize } from '@/lib/formatters';
@@ -40,6 +40,9 @@ export function AttachmentImagePreviewDialog({
           <DialogTitle className="truncate pr-6">
             {attachment ? `${attachment.fileName}${attachment.fileExtension}` : 'Photo preview'}
           </DialogTitle>
+          {/* Visually hidden: the file size/date line below the image already covers this for
+              sighted users, but Radix requires a description for assistive tech. */}
+          <DialogDescription className="sr-only">Full-size preview of the attached photo.</DialogDescription>
         </DialogHeader>
 
         <div className="flex min-h-[16rem] items-center justify-center overflow-hidden rounded-xl bg-muted/50 ring-1 ring-inset ring-border">

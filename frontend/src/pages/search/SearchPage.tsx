@@ -131,7 +131,10 @@ export default function SearchPage() {
                     title="Assets"
                     icon={Laptop}
                     items={data.assets}
-                    linkFor={admin ? (item) => routes.assets.detail(item.id) : undefined}
+                    // /assets/:id is open to any authenticated user, and SearchService already
+                    // scopes non-admin asset matches to assets ever assigned to the caller, so
+                    // every returned result is one the viewer is allowed to open.
+                    linkFor={(item) => routes.assets.detail(item.id)}
                   />
                   <ResultGroup
                     title="Users"

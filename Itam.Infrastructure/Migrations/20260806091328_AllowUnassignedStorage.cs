@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Itam.Infrastructure.Data.Migrations
+namespace Itam.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AllowUnassignedStorage : Migration

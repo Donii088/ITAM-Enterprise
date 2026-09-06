@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { FormInput } from '@/components/shared/form/FormInput';
 import { FormSelect } from '@/components/shared/form/FormSelect';
@@ -68,6 +68,7 @@ export function StorageFormDialog({ open, onOpenChange, storage }: StorageFormDi
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Add storage device' : 'Edit storage device'}</DialogTitle>
+          <DialogDescription>Attach a drive to a laptop or desktop, or update its details.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

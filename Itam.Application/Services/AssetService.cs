@@ -488,6 +488,28 @@ public sealed class AssetService : IAssetService
         var asset = await _dbContext.Assets.SingleOrDefaultAsync(a => a.Id == id, ct)
             ?? throw new EntityNotFoundException(nameof(Asset), id);
 
+        var activeAssignmentCount = await _dbContext.AssetAssignments
+            .CountAsync(a => a.AssetId == id && a.UnassignedAt == null, ct);
+        var openTicketCount = await _dbContext.Tickets
+            .CountAsync(t => t.AssetId == id && t.Status != TicketStatus.Done && t.Status != TicketStatus.Cancelled, ct);
+
+        if (activeAssignmentCount > 0 || openTicketCount > 0)
+        {
+            var blockers = new List<string>();
+            if (activeAssignmentCount > 0)
+            {
+                blockers.Add("an active assignment");
+            }
+            if (openTicketCount > 0)
+            {
+                blockers.Add($"{openTicketCount} open ticket{(openTicketCount == 1 ? "" : "s")}");
+            }
+
+            throw new BusinessRuleViolationException(
+                $"Asset cannot be deleted: it still has {string.Join(" and ", blockers)}. " +
+                "Unassign the asset and resolve or cancel its open tickets first.");
+        }
+
         var ticketIds = await _dbContext.Tickets
             .Where(t => t.AssetId == id)
             .Select(t => (Guid?)t.Id)

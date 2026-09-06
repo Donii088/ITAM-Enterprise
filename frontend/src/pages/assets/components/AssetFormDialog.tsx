@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { FormField } from '@/components/ui/FormField';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
@@ -385,6 +385,9 @@ export function AssetFormDialog({ open, onOpenChange, fixedType, asset }: AssetF
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Add new asset' : `Edit ${ASSET_TYPE_LABELS[selectedType]}`}</DialogTitle>
+          <DialogDescription>
+            {mode === 'create' ? 'Enter the details for the new asset.' : 'Update this asset’s details.'}
+          </DialogDescription>
         </DialogHeader>
 
         {mode === 'create' && (

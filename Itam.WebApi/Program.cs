@@ -14,6 +14,8 @@ using Itam.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+ValidateProductionSecrets(builder.Configuration, builder.Environment);
+
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddJwtAuthentication(builder.Configuration);
@@ -31,8 +33,10 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         }
-        else
+        else if (builder.Environment.IsDevelopment())
         {
+            // Local dev convenience only (no CorsSettings configured yet). Outside Development,
+            // an empty allow-list intentionally falls closed below rather than open to any origin.
             policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
         }
     });
@@ -131,3 +135,24 @@ app.MapGet("/health", async (ApplicationDbContext db) =>
 }).AllowAnonymous();
 
 app.Run();
+
+// The committed appsettings.json ships a sample JWT signing key for local development so the app
+// runs out of the box. Refusing to start with it outside Development stops that sample key from
+// ever protecting a real deployment — set it via the JwtSettings__Secret environment variable.
+static void ValidateProductionSecrets(IConfiguration configuration, IWebHostEnvironment environment)
+{
+    if (environment.IsDevelopment())
+    {
+        return;
+    }
+
+    const string knownSampleSecret = "SuperSecretKeyForJwtTokenGenerationThatIsAtLeast32BytesLong!";
+    var jwtSecret = configuration["JwtSettings:Secret"];
+
+    if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32 || jwtSecret == knownSampleSecret)
+    {
+        throw new InvalidOperationException(
+            "JwtSettings:Secret must be set to a unique value of at least 32 characters outside the " +
+            "Development environment. Set the JwtSettings__Secret environment variable before starting the app.");
+    }
+}

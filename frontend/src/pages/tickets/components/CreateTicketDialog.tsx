@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { FormInput } from '@/components/shared/form/FormInput';
@@ -72,6 +72,7 @@ export function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOp
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>Report an issue</DialogTitle>
+          <DialogDescription>Describe the problem and optionally attach photos for IT to review.</DialogDescription>
         </DialogHeader>
 
         {!assetsLoading && assetOptions.length === 0 ? (

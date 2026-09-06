@@ -163,6 +163,12 @@ public sealed class TicketService : ITicketService
         var ticket = await _dbContext.Tickets.SingleOrDefaultAsync(t => t.Id == id, ct)
             ?? throw new EntityNotFoundException(nameof(Ticket), id);
 
+        if (ticket.Status != TicketStatus.Done && ticket.Status != TicketStatus.Cancelled)
+        {
+            throw new BusinessRuleViolationException(
+                "Ticket cannot be deleted while it is still open. Resolve or cancel it first.");
+        }
+
         // Attachment.TicketId and RepairHistory.TicketId are both DeleteBehavior.Restrict, so a
         // plain Tickets.Remove would fail on FK violation for any ticket with photos or a repair
         // record. Cascade the delete manually, same pattern as AssetService.HardDeleteAsync:

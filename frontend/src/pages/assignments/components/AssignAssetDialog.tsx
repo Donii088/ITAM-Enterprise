@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { FormSelect } from '@/components/shared/form/FormSelect';
@@ -75,6 +75,7 @@ export function AssignAssetDialog({ open, onOpenChange, initialAssetSearchTerm, 
       <DialogContent size="md">
         <DialogHeader>
           <DialogTitle>Assign asset</DialogTitle>
+          <DialogDescription>Give an available asset to an employee.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <SearchInput

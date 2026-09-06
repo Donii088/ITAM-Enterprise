@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { FormSelect } from '@/components/shared/form/FormSelect';
 import { assetStatusSchema, type AssetStatusFormValues } from '@/features/assets/schemas';
@@ -35,6 +35,7 @@ export function AssetStatusDialog({ open, onOpenChange, assetId, currentStatus }
       <DialogContent size="sm">
         <DialogHeader>
           <DialogTitle>Update asset status</DialogTitle>
+          <DialogDescription>Changing to Broken or In Repair will automatically close any active assignment.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <FormSelect control={control} name="status" label="Status" options={STATUS_OPTIONS} required />

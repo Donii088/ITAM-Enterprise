@@ -5,7 +5,7 @@ import { HardDrive, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { FormField } from '@/components/ui/FormField';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { FormInput } from '@/components/shared/form/FormInput';
 import { FormSelect } from '@/components/shared/form/FormSelect';
 import { useStorageList, useCreateStorage, useAttachStorageToAsset } from '@/features/assets/useAssets';
@@ -190,6 +190,7 @@ function CreateStorageInlineDialog({
       <DialogContent size="md">
         <DialogHeader>
           <DialogTitle>Create new storage device</DialogTitle>
+          <DialogDescription>Add a new drive to attach to this asset.</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={(e) => {

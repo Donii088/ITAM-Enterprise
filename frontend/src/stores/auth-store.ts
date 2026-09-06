@@ -1,7 +1,26 @@
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import type { AuthResponse, AuthUser } from '@/types';
-import { authStorage } from '@/lib/remember-me';
+import { authStorage, otherAuthStorage } from '@/lib/remember-me';
+
+// createJSONStorage resolves its getStorage() callback exactly once, at this module's first
+// import, and caches that Storage object for the app's lifetime. Passing `authStorage` directly
+// would lock in whichever of localStorage/sessionStorage was current at load time, so toggling
+// "keep me signed in" at login would silently keep writing to the old storage until a full page
+// reload. This wrapper re-resolves authStorage() on every read/write instead, so a remember-me
+// change takes effect immediately.
+const dynamicAuthStorage: StateStorage = {
+  getItem: (name) => authStorage().getItem(name),
+  setItem: (name, value) => {
+    authStorage().setItem(name, value);
+    // Clean up any stale copy left in the other storage by a prior remember-me choice.
+    otherAuthStorage().removeItem(name);
+  },
+  removeItem: (name) => {
+    authStorage().removeItem(name);
+    otherAuthStorage().removeItem(name);
+  },
+};
 
 interface AuthState {
   accessToken: string | null;
@@ -33,7 +52,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'itam-auth',
-      storage: createJSONStorage(authStorage),
+      storage: createJSONStorage(() => dynamicAuthStorage),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated();
       },

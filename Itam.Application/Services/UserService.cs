@@ -132,6 +132,12 @@ public sealed class UserService : IUserService
 
     public async Task<UserDto> DeactivateAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        if (_currentUserService.UserId == id)
+        {
+            throw new BusinessRuleViolationException(
+                "You cannot deactivate your own account. Another administrator must do it.");
+        }
+
         var user = await _dbContext.Users
             .Include(u => u.AssetAssignments.Where(a => a.UnassignedAt == null))
                 .ThenInclude(a => a.Asset)

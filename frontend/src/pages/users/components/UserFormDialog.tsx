@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { FormInput } from '@/components/shared/form/FormInput';
 import { FormSelect } from '@/components/shared/form/FormSelect';
@@ -104,21 +104,28 @@ function EditForm({ user, onDone }: { user: User; onDone: () => void }) {
         />
       </div>
 
-      <div className="space-y-4 rounded-lg border border-border p-3">
-        <p className="text-sm font-medium text-foreground">Reset password (optional)</p>
-        <p className="-mt-2 text-xs text-muted-foreground">
-          Leave both fields blank to keep the user's current password.
+      {isSelf ? (
+        <p className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+          To change your own password, use the "Change password" card on your profile page instead — it verifies
+          your current password first.
         </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormPasswordInput
-            control={control}
-            name="newPassword"
-            label="New password"
-            hint="At least 8 characters, with uppercase, lowercase, and a digit."
-          />
-          <FormPasswordInput control={control} name="confirmPassword" label="Confirm new password" />
+      ) : (
+        <div className="space-y-4 rounded-lg border border-border p-3">
+          <p className="text-sm font-medium text-foreground">Reset password (optional)</p>
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Leave both fields blank to keep the user's current password.
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormPasswordInput
+              control={control}
+              name="newPassword"
+              label="New password"
+              hint="At least 8 characters, with uppercase, lowercase, and a digit."
+            />
+            <FormPasswordInput control={control} name="confirmPassword" label="Confirm new password" />
+          </div>
         </div>
-      </div>
+      )}
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone} disabled={formState.isSubmitting}>
@@ -142,6 +149,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>{user ? 'Edit user' : 'Add new user'}</DialogTitle>
+          <DialogDescription>{user ? 'Update this user’s details.' : 'Create a new employee or IT admin account.'}</DialogDescription>
         </DialogHeader>
         {user ? <EditForm user={user} onDone={handleDone} /> : <CreateForm onDone={handleDone} />}
       </DialogContent>
