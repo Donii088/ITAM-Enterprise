@@ -66,15 +66,9 @@ body {
 }
 
 .scrollbar-thin {
-  scrollbar-width: thin;
+  scrollbar-width: none;
 }
-.scrollbar-thin::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
-}
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/30 rounded-full;
-}
+
 
 /* Premium shimmer skeleton — a soft light sweep instead of a flat pulse. */
 .skeleton {
